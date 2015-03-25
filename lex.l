@@ -1,17 +1,18 @@
 %{
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include "y.tab.h"
 
-#ifndef	YYSTYPE
-#define YYSTYPE char*
-#endif
 %}
 
 %%
+setenv		return SETENV;
+printenv	return PRINTENV;
+unsetenv	return UNSETENV;
 cd			return CD;
 bye			return BYE;
-[a-zA-z]+	return WORD;
+[a-zA-z]+	yylval.sval = strdup(yytext); return WORD;
 %%

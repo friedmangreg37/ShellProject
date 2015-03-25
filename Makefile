@@ -20,7 +20,7 @@ lex.yy.c:	lex.l
 			lex lex.l
 
 parser:		$(OBJS)
-			$(CC) $(OBJS)  -o $@ -ll -lm
+			$(CC) $(OBJS)  -o $@ -lm
 
 clean:;		rm -f $(OBJS) core *~ \#* *.o $(PROGRAM) \
 			y.* lex.yy.* calcparse.tab.*
