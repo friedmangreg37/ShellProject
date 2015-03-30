@@ -64,58 +64,51 @@ int yywrap()
   
 main()
 {
-	//clearenv();
   	yyparse();
 } 
 
 %}
 
 %union {
+	int i;
 	char* sval;
 }
 
-%token <sval> SETENV UNSETENV PRINTENV ALIAS UNALIAS CD BYE WORD
-%type <sval> set_var unset_var print_var alias unalias change_dir goodbye
+%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE
+%token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD
+%token <sval>	WORD
+%type <sval> env alias directory goodbye
 
 %%
 commands:
 		| commands command
 		;
 command:
-		set_var
-		|
-		unset_var
-		|
-		print_var
+		env
 		|
 		alias
 		|
-		unalias
-		|
-		change_dir
+		directory
 		|
 		goodbye
 		;
-set_var: 
+env: 
 		SETENV WORD WORD
 		{
 			setenv($2, $3, 1);
 		}
-		;
-unset_var:
+		|
 		UNSETENV WORD
 		{
 			unsetenv($2);
 		}
-		;
-print_var:
+		|
 		PRINTENV 
 		{
 			int i = 0;
 			while(environ[i])
 				puts(environ[i++]);
 		}
-		;
 alias:
 		ALIAS
 		{
@@ -126,26 +119,37 @@ alias:
 		{
 			insertAlias($2, $3);
 		}
-		;
-unalias:
+		|
 		UNALIAS WORD
 		{
 			removeAlias($2);
 		}
-		;
-change_dir:
-		CD
-		{
-			printf("Change directory to home\n");
-		}
-		|
+directory:
 		CD WORD
 		{
 			char* dir = $2;
 			printf("%s\n", dir);
 			chdir(dir);
 		}
-		;
+		|
+		CD
+		{
+			char* home = getenv("HOME");
+			printf("Change directory to %s\n", home);
+			chdir(home);
+		}
+		|
+		PWD
+			{ 
+				char * buf;
+    			char * cwd;
+    			buf = (char *)malloc(sizeof(char) * 1024);
+
+    			if((cwd = getcwd(buf, 1024)) != NULL)
+            		printf("pwd : %s\n", cwd);
+    			else
+           			perror("getcwd() error : ");
+			}
 goodbye:
 		BYE
 		{
