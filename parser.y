@@ -3,53 +3,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include "shell.h"
 
 extern char** environ;
 extern char* yytext;
-
-typedef struct aliasNode {
-	char* name;
-	char* word;
-	struct aliasNode* next;
-} aliasNode;
-
-aliasNode headNode = { NULL, NULL, NULL };
-aliasNode* head = &headNode;
-
-int insertAlias(char* theName, char* theWord) {
-	aliasNode* newNode = (aliasNode*)malloc(sizeof(aliasNode));
-	if(newNode == NULL)
-		return -1;
-	newNode -> name = theName;
-	newNode -> word = theWord;
-	newNode -> next = head -> next;
-	head -> next = newNode;
-	return 0;
-}
-
-void removeAlias(char* theName) {
-	aliasNode* curr, *prev;
-	curr = head -> next;
-	prev = head;
-	while(curr != NULL && (strcmp(curr->name, theName) != 0)) {
-		prev = curr;
-		curr = curr->next;
-	}
-	if(curr == NULL) {
-		printf("not found\n");
-		return;
-	}
-	prev->next = curr->next;
-	free(curr);
-}
-
-void printAliases() {
-	aliasNode* temp = head -> next;
-	while(temp != NULL) {
-		printf("%s:%s\n", temp->name, temp->word);
-		temp = temp->next;
-	}
-}
  
 void yyerror(const char *str)
 {
@@ -61,11 +18,6 @@ int yywrap()
 {
     return 1;
 } 
-  
-main()
-{
-  	yyparse();
-} 
 
 %}
 
@@ -74,7 +26,7 @@ main()
 	char* sval;
 }
 
-%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE
+%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE NEWLINE
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD
 %token <sval>	WORD
 %type <sval> env alias directory goodbye
@@ -93,53 +45,51 @@ command:
 		goodbye
 		;
 env: 
-		SETENV WORD WORD
+		SETENV WORD WORD NEWLINE
 		{
 			setenv($2, $3, 1);
 		}
 		|
-		UNSETENV WORD
+		UNSETENV WORD NEWLINE
 		{
 			unsetenv($2);
 		}
 		|
-		PRINTENV 
+		PRINTENV NEWLINE
 		{
 			int i = 0;
 			while(environ[i])
 				puts(environ[i++]);
 		}
 alias:
-		ALIAS
+		ALIAS NEWLINE
 		{
 			printAliases();
 		}
 		|
-		ALIAS WORD WORD
+		ALIAS WORD WORD NEWLINE
 		{
 			insertAlias($2, $3);
 		}
 		|
-		UNALIAS WORD
+		UNALIAS WORD NEWLINE
 		{
 			removeAlias($2);
 		}
 directory:
-		CD WORD
+		CD WORD NEWLINE
 		{
 			char* dir = $2;
-			printf("%s\n", dir);
 			chdir(dir);
 		}
 		|
-		CD
+		CD NEWLINE
 		{
 			char* home = getenv("HOME");
-			printf("Change directory to %s\n", home);
 			chdir(home);
 		}
 		|
-		PWD
+		PWD NEWLINE
 			{ 
 				char * buf;
     			char * cwd;
@@ -151,7 +101,7 @@ directory:
            			perror("getcwd() error : ");
 			}
 goodbye:
-		BYE
+		BYE NEWLINE
 		{
 			printf("Exiting shell now\n");
 			exit(0);

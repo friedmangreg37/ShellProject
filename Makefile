@@ -2,9 +2,9 @@ YFLAGS        = -d
 
 PROGRAM       = parser
 
-OBJS          = y.tab.o lex.yy.o 
+OBJS          = y.tab.o lex.yy.o shell.o
 
-SRCS          = y.tab.c lex.yy.c
+SRCS          = y.tab.c lex.yy.c shell.c 
 
 CC            = gcc 
 
