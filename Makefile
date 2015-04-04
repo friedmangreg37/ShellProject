@@ -1,6 +1,6 @@
 YFLAGS        = -d
 
-PROGRAM       = parser
+PROGRAM       = shell
 
 OBJS          = y.tab.o lex.yy.o shell.o
 
@@ -19,7 +19,7 @@ y.tab.c:	parser.y
 lex.yy.c:	lex.l 
 			lex lex.l
 
-parser:		$(OBJS)
+shell:		$(OBJS)
 			$(CC) $(OBJS)  -o $@ -lm
 
 clean:;		rm -f $(OBJS) core *~ \#* *.o $(PROGRAM) \
