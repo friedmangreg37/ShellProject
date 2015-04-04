@@ -3,21 +3,86 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "shell.h"
+#include <errno.h>
+#include <string.h>
 
 char* prompt_string;
 int currcmd;
 aliasNode headAliasNode;
 aliasNode* aliasHead;
+char** environ;
+int bicmd, bioutf;
+char* bistr;
 
-void initShell(), printPrompt(), removeAlias(char*), printAliases();
-int insertAlias(char*, char*);
+void initShell(), printPrompt(), removeAlias(char*), printAliases(), processCommand(), initScanner();
+void do_it(), execute_it();
+int insertAlias(char*, char*), getCommand();
 
 int main() {
 	initShell();
+	int cmd;
 	while(1) {
 		printPrompt();
-		yyparse();
+		switch(cmd = getCommand()) {
+			case OK:
+				processCommand();
+				break;
+			default:
+				printf("something else\n");
+		}
+
 	}
+}
+
+void initScanner() {
+	bicmd = 0;
+	bioutf = 0;
+	bistr = NULL;
+}
+
+int getCommand() {
+	initScanner();
+	if(yyparse())
+		printf("there was an error\n");
+	else
+		return OK;
+}
+
+void processCommand() {
+	if(bicmd)
+		do_it();
+	else
+		execute_it();
+}
+
+void do_it() {
+	FILE* fp;
+	switch(bicmd) {
+		case PRINTENVIRON:
+			if(bioutf) {	//if true that there was output redirection
+				fp = fopen(bistr, "a");
+				if(fp == NULL)
+					printf("%s", strerror(errno));
+			}
+			int i = 0;
+			while(environ[i]) {
+				if(bioutf) {
+					fputs(environ[i++], fp);
+					fputs("\n", fp);
+				}
+				else
+					puts(environ[i++]);
+			}
+			if(bioutf)
+				fclose(fp);
+			break;
+		default:
+			break;
+	}
+}
+
+void execute_it() {
+
 }
 
 void initShell() {
@@ -26,6 +91,7 @@ void initShell() {
 	headAliasNode.word = NULL;
 	headAliasNode.next = NULL;
 	aliasHead = &headAliasNode;
+	bicmd = 0;
 }
 
 void printPrompt() {

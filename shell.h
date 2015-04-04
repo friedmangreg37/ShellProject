@@ -18,6 +18,9 @@
 
 #define REGISTRY "REGISTRY"
 
+//built-in commands:
+#define PRINTENVIRON 1 
+
 //command line arguments
 typedef struct comargs {
 	char* args[MAXARGS];
