@@ -61,6 +61,10 @@ void removeAlias(char* theName) {
 
 void printAliases() {
 	aliasNode* temp = aliasHead -> next;
+	if(temp == NULL) {
+		printf("No aliases\n");
+		return;
+	}
 	while(temp != NULL) {
 		printf("%s:%s\n", temp->name, temp->word);
 		temp = temp->next;
