@@ -26,70 +26,64 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE NEWLINE
-%token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD
+%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE
+%token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD LS
 %token <sval>	WORD
-%type <sval> env alias directory goodbye
 
 %%
 commands:
 		| commands command
 		;
 command:
-		env
-		|
-		alias
-		|
-		directory
-		|
-		goodbye
-		;
-env: 
-		SETENV WORD WORD NEWLINE
+		| builtin
+		| builtin LT WORD
+			{ printf("Error: illegal input redirection\n"); }
+builtin:
+		SETENV WORD WORD
 		{
 			setenv($2, $3, 1);
 		}
 		|
-		UNSETENV WORD NEWLINE
+		UNSETENV WORD
 		{
 			unsetenv($2);
 		}
 		|
-		PRINTENV NEWLINE
+		PRINTENV
 		{
 			int i = 0;
 			while(environ[i])
 				puts(environ[i++]);
 		}
-alias:
-		ALIAS NEWLINE
+		|
+		ALIAS
 		{
 			printAliases();
 		}
 		|
-		ALIAS WORD WORD NEWLINE
+		ALIAS WORD WORD
 		{
 			insertAlias($2, $3);
 		}
 		|
-		UNALIAS WORD NEWLINE
+		UNALIAS WORD
 		{
 			removeAlias($2);
 		}
-directory:
-		CD WORD NEWLINE
+		|
+		CD WORD
 		{
 			char* dir = $2;
 			chdir(dir);
 		}
 		|
-		CD NEWLINE
+		CD
 		{
 			char* home = getenv("HOME");
 			chdir(home);
 		}
 		|
-		PWD NEWLINE
+		PWD
 			{ 
 				char * buf;
     			char * cwd;
@@ -100,8 +94,13 @@ directory:
     			else
            			perror("getcwd() error : ");
 			}
-goodbye:
-		BYE NEWLINE
+		|
+		LS
+			{
+				//execlp("ls", "ls", "/usr", (char *) 0);	
+			}
+		|
+		BYE
 		{
 			printf("Exiting shell now\n");
 			exit(0);
