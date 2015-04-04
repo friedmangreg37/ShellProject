@@ -51,9 +51,15 @@ builtin:
 		|
 		PRINTENV
 		{
-			int i = 0;
-			while(environ[i])
-				puts(environ[i++]);
+			bicmd = PRINTENVIRON;	//set builtin command
+			bioutf = 0;		//output redirection is false
+		}
+		|
+		PRINTENV GT WORD
+		{
+			bicmd = PRINTENVIRON;
+			bioutf = 1;		//output redirection is true
+			bistr = $3;
 		}
 		|
 		ALIAS
