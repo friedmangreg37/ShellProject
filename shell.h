@@ -19,6 +19,7 @@
 
 //built-in commands:
 #define PRINTENVIRON 1 
+#define GOODBYE 2
 
 //command line arguments
 typedef struct comargs {
@@ -68,6 +69,7 @@ extern int debug;
 extern int IwasSet;
 extern int err;
 extern int error_somewhere;
+extern char* err_msg;
 extern int ap;
 extern int cmd_has_tail;
 extern int background;
