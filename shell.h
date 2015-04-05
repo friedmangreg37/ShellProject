@@ -61,15 +61,15 @@ extern int pathlength;
 extern int currarg;
 extern int login;
 extern int builtin;
-extern int bicmd;
-extern int bioutf;
-extern char* bistr;
-extern char* bistr2;
+extern int bicmd;		//specifies which built-in command was read - 0 if not built-in
+extern int bioutf;		//Is output being redirected for a built-in?
+extern char* bistr;		//string to be used for doing built-ins
+extern char* bistr2;	//second string for use with built-ins
 extern int debug;
 extern int IwasSet;
 extern int err;
 extern int error_somewhere;
-extern char* err_msg;
+extern char* err_msg;	//string for error message
 extern int ap;
 extern int cmd_has_tail;
 extern int background;

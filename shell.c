@@ -13,6 +13,7 @@ aliasNode* aliasHead;
 char** environ;
 int bicmd, bioutf;
 char* bistr;
+char* bistr2;
 FILE* fpin;
 FILE* fpout;
 FILE* fperror;
@@ -29,9 +30,10 @@ char* findAlias(char*);
 
 int main(int argc, char** argv) {
 	initShell();
-	if( (argc > 1) && (strcmp(argv[1], "<")) ) {
-		inRedirect = 1;
+	if( (argc > 1) && (strcmp(argv[1], "<")) ) {	//if input redirected
+		inRedirect = 1;		//set to true
 		strcpy(inFilename, argv[2]);
+		//open file
 		fpin = fopen(inFilename, "r");
 		if(fpin == NULL) {
 			printf("Input file %s error\n", inFilename);
@@ -42,7 +44,7 @@ int main(int argc, char** argv) {
 		printPrompt();
 		switch(cmd = getCommand()) {
 			case DONE:
-				if(inRedirect)
+				if(inRedirect)	//if input was redirected, close file
 					fclose(fpin);
 				printf("Exiting shell now\n");
 				exit(0);
@@ -57,32 +59,39 @@ int main(int argc, char** argv) {
 }
 
 void initScanner() {
-	bicmd = 0;
-	bioutf = 0;
-	bistr = NULL;
+	bicmd = 0;	//initially false that built-in is read
+	bioutf = 0;	//false that output redirected
+	bistr = NULL;	//null string
+	bistr2 = NULL;	//null string
 }
 
 int getCommand() {
 	initScanner();
-	const char s[2] = " \t";
+	const char s[2] = " \t";	//delineator for strtok
 	char* token, *p;
 	int nTokens;
-	aliasStr[0] = '\0';
+	aliasStr[0] = '\0';		//string after aliases expanded - initally empty
 	if(fgets(inStr, 80, fpin) == NULL)	//end of file
 		return DONE;
-	//printf("%s\n", inStr);
-	//char* temp = strdup(inStr);
 	token = strtok(inStr, s);
-	//printf("%s\n", inStr);
 	nTokens = 1;
+	char* temp;
+	//expand aliases:
+	if(token != NULL) {
+		temp = findAlias(token);
+		//check if there's an alias for the first word
+		while(temp != NULL) {
+			token = temp;	//replace with its alias
+			temp = findAlias(token);	//and check again
+		}
+	}
 	while(token != NULL) {
 		p = token;
-		//deal with aliases
-		strcat(aliasStr, p);
-		strcat(aliasStr, " ");
-		token = strtok(NULL, s);
+		strcat(aliasStr, p);	//append to string
+		strcat(aliasStr, " ");	//add space between tokens
+		token = strtok(NULL, s);	//get next
 	}
-	yy_scan_string(aliasStr);
+	yy_scan_string(aliasStr);	//pass the expanded string to lex
 	if(yyparse())
 		printf("there was an error\n");
 	else
@@ -96,6 +105,7 @@ void processCommand() {
 		execute_it();
 }
 
+//function to perform built-in commands
 void do_it() {
 	FILE* fp;
 	switch(bicmd) {
@@ -126,26 +136,28 @@ void do_it() {
 	}
 }
 
+//function to execute non built-in commands
 void execute_it() {
 
 }
 
 void initShell() {
-	fpin = stdin;
-	fpout = stdout;
-	fperror = stderr;
-	prompt_string = ">> ";
-	headAliasNode.name = NULL;
+	fpin = stdin;		//set default file pointer for input to stdin
+	fpout = stdout;		//default fp for output is stdout
+	fperror = stderr;	//default fp for error is sderr
+	prompt_string = ">> ";	
+	headAliasNode.name = NULL;	//initialize alias list to empty
 	headAliasNode.word = NULL;
 	headAliasNode.next = NULL;
 	aliasHead = &headAliasNode;
-	bicmd = 0;
+	bicmd = 0;		//initially false that a built-in command was read
 }
 
 void printPrompt() {
 	printf("%s", prompt_string);
 }
 
+//function to add alias with specified name to head of linked list for aliases
 int insertAlias(char* theName, char* theWord) {
 	//don't allow alias to be created for itself
 	if(strcmp(theName, theWord) == 0) {
@@ -183,6 +195,7 @@ int insertAlias(char* theName, char* theWord) {
 	return 0;
 }
 
+//function to remove alias with given name - does nothing if doesn't exist
 void removeAlias(char* theName) {
 	aliasNode* curr, *prev;
 	curr = aliasHead -> next;
@@ -199,6 +212,7 @@ void removeAlias(char* theName) {
 	free(curr);
 }
 
+//function to print all of the aliases currently defined
 void printAliases() {
 	aliasNode* temp = aliasHead -> next;
 	if(temp == NULL) {
@@ -223,6 +237,7 @@ int aliasExists(char* theName) {
 	return 0;
 }
 
+//function find the alias for a given name - returns null if none exists
 char* findAlias(char* theName) {
 	char* ret = NULL;
 	aliasNode* curr = aliasHead -> next;
