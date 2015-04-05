@@ -27,7 +27,7 @@ int yywrap()
 }
 
 %token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE
-%token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD LS
+%token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD
 %token <sval>	WORD
 
 %%
@@ -101,15 +101,9 @@ builtin:
            			perror("getcwd() error : ");
 			}
 		|
-		LS
-			{
-				//execlp("ls", "ls", "/usr", (char *) 0);	
-			}
-		|
 		BYE
 		{
-			printf("Exiting shell now\n");
-			exit(0);
+			bicmd = GOODBYE;
 		}
 		;
 %%

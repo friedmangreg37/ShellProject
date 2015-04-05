@@ -25,6 +25,7 @@ char aliasStr[160];
 void initShell(), printPrompt(), removeAlias(char*), printAliases(), processCommand(), initScanner();
 void do_it(), execute_it();
 int insertAlias(char*, char*), getCommand();
+char* findAlias(char*);
 
 int main(int argc, char** argv) {
 	initShell();
@@ -98,6 +99,10 @@ void processCommand() {
 void do_it() {
 	FILE* fp;
 	switch(bicmd) {
+		//case alias - if adding alias, return error if -1 returned
+		case GOODBYE:
+			printf("Exiting shell now\n");
+			exit(0);
 		case PRINTENVIRON:
 			if(bioutf) {	//if true that there was output redirection
 				fp = fopen(bistr, "a");
@@ -142,9 +147,35 @@ void printPrompt() {
 }
 
 int insertAlias(char* theName, char* theWord) {
-	aliasNode* newNode = (aliasNode*)malloc(sizeof(aliasNode));
-	if(newNode == NULL)
+	//don't allow alias to be created for itself
+	if(strcmp(theName, theWord) == 0) {
+		//error message for this
+		printf("Cannot create alias for itself\n");
 		return -1;
+	}
+	//check if alias already exists for theName
+	if(aliasExists(theName)) {
+		//set error message for the following:
+		printf("Alias already exists for %s\n", theName);
+		return -1;
+	}
+	//check for circular aliasing
+	char* tempName = theWord;
+	char* tempWord = findAlias(tempName);
+	while(tempWord != NULL) {
+		if(strcmp(tempWord, theName) == 0) {
+			//error message for circular aliasing
+			printf("Error: cannot add alias - will result in infinite alias expansion\n");
+			return -1;
+		}
+		tempName = tempWord;
+		tempWord = findAlias(tempName);
+	}
+	aliasNode* newNode = (aliasNode*)malloc(sizeof(aliasNode));
+	if(newNode == NULL) {
+		//set error message to indicate memory issue
+		return -1;
+	}
 	newNode -> name = theName;
 	newNode -> word = theWord;
 	newNode -> next = aliasHead -> next;
@@ -178,4 +209,29 @@ void printAliases() {
 		printf("%s:%s\n", temp->name, temp->word);
 		temp = temp->next;
 	}
+}
+
+//function to check if alias already exists for given name
+int aliasExists(char* theName) {
+	aliasNode* curr = aliasHead -> next;
+	while(curr != NULL) {
+		if(strcmp(curr->name, theName) == 0) {
+			return 1;
+		}
+		curr = curr->next;
+	}
+	return 0;
+}
+
+char* findAlias(char* theName) {
+	char* ret = NULL;
+	aliasNode* curr = aliasHead -> next;
+	while(curr != NULL) {
+		if(strcmp(curr->name, theName) == 0) {
+			ret = curr->word;
+			return ret;
+		}
+		curr = curr->next;
+	}
+	return NULL;
 }

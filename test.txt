@@ -1,7 +1,19 @@
+pwd
 cd
 pwd
 setenv this that
 printenv
 unsetenv this
 printenv
+alias
+alias this this
+alias
+alias this that
+alias
+alias this those
+alias
+alias that those
+alias
+alias those this
+alias
 bye
