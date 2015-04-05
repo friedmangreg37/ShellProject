@@ -1,0 +1,7 @@
+cd
+pwd
+setenv this that
+printenv
+unsetenv this
+printenv
+bye

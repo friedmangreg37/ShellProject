@@ -5,9 +5,8 @@
 #define MAXPATH 50
 
 #define OK 0
-#define SYSERR 1
-#define OLD_ERR 3
-#define SYSCALLERR -1
+#define ERRORS 1
+#define DONE 2
 
 #define BADFD -2
 #define EOFILE 2
