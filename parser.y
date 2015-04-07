@@ -10,8 +10,8 @@ extern char* yytext;
  
 void yyerror(const char *str)
 {
-    fprintf(stderr,"error: %s\n",str);
-    yyparse();
+    //fprintf(stderr,"error: %s\n",str);
+    //yyparse();
 }
  
 int yywrap()
@@ -26,9 +26,9 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT AMP LPAREN RPAREN BAR DOT QUOTE
+%token <i>	LT GT AMP LPAREN RPAREN BAR DOT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS PWD
-%token <sval>	WORD
+%token <sval>	WORD 
 
 %%
 commands:
@@ -41,6 +41,7 @@ command:
 builtin:
 		SETENV WORD WORD
 		{
+			//bicmd = SETENVIRON;	//set builtin command
 			setenv($2, $3, 1);
 		}
 		|
