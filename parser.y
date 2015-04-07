@@ -41,13 +41,15 @@ command:
 builtin:
 		SETENV WORD WORD
 		{
-			//bicmd = SETENVIRON;	//set builtin command
-			setenv($2, $3, 1);
+			bicmd = SETENVIRON;	//set builtin command
+			bistr = $2;
+			bistr2 = $3;
 		}
 		|
 		UNSETENV WORD
 		{
-			unsetenv($2);
+			bicmd = UNSETENVIRON;	//set builtin command
+			bistr = $2;
 		}
 		|
 		PRINTENV
@@ -65,42 +67,40 @@ builtin:
 		|
 		ALIAS
 		{
-			printAliases();
+			bicmd = PRINTALIAS;
+		}
+		|
+		ALIAS GT WORD
+		{
+			bicmd = PRINTALIAS;
+			bioutf = 1;	//output redirection is true
+			bistr = $3;		//filename
 		}
 		|
 		ALIAS WORD WORD
 		{
-			insertAlias($2, $3);
+			bicmd = SETALIAS;
+			bistr = $2;
+			bistr2 = $3;
 		}
 		|
 		UNALIAS WORD
 		{
-			removeAlias($2);
+			bicmd = UNSETALIAS;
+			bistr = $2;
 		}
 		|
 		CD WORD
 		{
-			char* dir = $2;
-			chdir(dir);
+			bicmd = CHANGEDIR;
+			bistr = $2;
 		}
 		|
 		CD
 		{
-			char* home = getenv("HOME");
-			chdir(home);
+			bicmd = CHANGEDIR;
+			bistr = NULL;
 		}
-		|
-		PWD
-			{ 
-				char * buf;
-    			char * cwd;
-    			buf = (char *)malloc(sizeof(char) * 1024);
-
-    			if((cwd = getcwd(buf, 1024)) != NULL)
-            		printf("pwd : %s\n", cwd);
-    			else
-           			perror("getcwd() error : ");
-			}
 		|
 		BYE
 		{

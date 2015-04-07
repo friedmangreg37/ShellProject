@@ -21,6 +21,12 @@
 //built-in commands:
 #define PRINTENVIRON 1 
 #define GOODBYE 2
+#define SETENVIRON 3
+#define UNSETENVIRON 4
+#define PRINTALIAS 5
+#define SETALIAS 6
+#define UNSETALIAS 7
+#define CHANGEDIR 8
 
 #define PIPE_ERR -1 	//error for exceeding max number of pipes
 #define QUOTES_ERR -2	//error for mismatched quotes within string

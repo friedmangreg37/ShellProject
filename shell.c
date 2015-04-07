@@ -24,7 +24,7 @@ char inStr[80];
 char aliasStr[160];
 char* err_msg;
 
-void initShell(), printPrompt(), removeAlias(char*), printAliases(), processCommand(), initScanner();
+void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), processCommand(), initScanner();
 void do_it(), execute_it();
 int insertAlias(char*, char*), getCommand();
 char* findAlias(char*);
@@ -104,7 +104,7 @@ int getCommand() {
 		pid_t pid = fork();
 		int* status;	//place where wait will store status
 		if(pid == 0) {
-			int execReturn = execve("/bin/ls", args, environ);
+			int execReturn = execve("/bin/pwd", args, environ);
 			if(execReturn == -1) {
 				err_msg = "failed to execute command";
 				return ERRORS;
@@ -143,11 +143,17 @@ void do_it() {
 		case GOODBYE:
 			printf("Exiting shell now\n");
 			exit(0);
+		case SETENVIRON:
+			setenv(bistr, bistr2, 1);
+			break;
+		case UNSETENVIRON:
+			unsetenv(bistr);
+			break;
 		case PRINTENVIRON:
 			if(bioutf) {	//if true that there was output redirection
 				fp = fopen(bistr, "a");
 				if(fp == NULL)
-					printf("%s", strerror(errno));
+					printf("Error: %s\n", strerror(errno));
 			}
 			int i = 0;
 			while(environ[i]) {
@@ -160,6 +166,29 @@ void do_it() {
 			}
 			if(bioutf)
 				fclose(fp);
+			break;
+		case PRINTALIAS:
+			fp = stdout;
+			if(bioutf) {
+				fp = fopen(bistr, "a");
+				if(fp == NULL)
+					printf("Error: %s\n", strerror(errno));
+			}
+			printAliases(fp);
+			if(bioutf)
+				fclose(fp);
+			break;
+		case SETALIAS:
+			insertAlias(bistr, bistr2);
+			break;
+		case UNSETALIAS:
+			removeAlias(bistr);
+			break;
+		case CHANGEDIR:
+			if(bistr)
+				chdir(bistr);
+			else
+				chdir(getenv("HOME"));
 			break;
 		default:
 			break;
@@ -243,14 +272,14 @@ void removeAlias(char* theName) {
 }
 
 //function to print all of the aliases currently defined
-void printAliases() {
+void printAliases(FILE* fp) {
 	aliasNode* temp = aliasHead -> next;
 	if(temp == NULL) {
-		printf("No aliases\n");
+		fprintf(fp, "No aliases\n");
 		return;
 	}
 	while(temp != NULL) {
-		printf("%s:%s\n", temp->name, temp->word);
+		fprintf(fp, "%s:%s\n", temp->name, temp->word);
 		temp = temp->next;
 	}
 }
