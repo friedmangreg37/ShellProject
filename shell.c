@@ -22,6 +22,7 @@ char inFilename[80];
 int cmd;
 char inStr[80];
 char aliasStr[160];
+char* err_msg;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(), processCommand(), initScanner();
 void do_it(), execute_it();
@@ -51,8 +52,9 @@ int main(int argc, char** argv) {
 			case OK:
 				processCommand();
 				break;
-			default:
-				printf("something else\n");
+			case ERRORS:
+				fprintf(fperror, "Error: %s\n", err_msg);
+				break;
 		}
 
 	}
@@ -92,8 +94,36 @@ int getCommand() {
 		token = strtok(NULL, s);	//get next
 	}
 	yy_scan_string(aliasStr);	//pass the expanded string to lex
-	if(yyparse())
-		printf("there was an error\n");
+	int y = yyparse();
+	if(y == 1) {
+		char* args[] = {"ls", (char*) 0};
+		//execve("/bin/ls", args, environ);
+		//printf("%d\n", ret);
+		// err_msg = "syntax error";
+		// return ERRORS;
+		pid_t pid = fork();
+		int* status;	//place where wait will store status
+		if(pid == 0) {
+			int execReturn = execve("/bin/ls", args, environ);
+			if(execReturn == -1) {
+				err_msg = "failed to execute command";
+				return ERRORS;
+			}
+			exit(0);
+		}
+		else if(pid < 0) {
+			err_msg = "process failed to fork";
+			return ERRORS;
+		}
+		else {
+			printf("parent process\n");
+			wait(status);
+		}
+		return OK;
+	}else if(y == 2) { //memory exhaustion error
+		err_msg = "memory exhaustion error";
+		return ERRORS;
+	}
 	else
 		return OK;
 }

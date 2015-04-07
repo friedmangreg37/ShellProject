@@ -25,12 +25,16 @@ setting err_msg - some in comments (insertAlias)
 
 quotations
 
-piping
-
 non built-in commands - should be able to just use exec sys calls 
+
+piping - only for non built-ins so figure those out first
 
 & - running in background
 
 redirecting error
 
 look at 2.3 - other commands section to check what needs to be done for redirection, piping, etc
+
+scan for \(metacharacter)
+
+don't alias for built-ins anyways so don't worry about this

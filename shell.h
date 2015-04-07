@@ -3,6 +3,7 @@
 #define MAXALIAS 100
 #define MAXCACHE 100
 #define MAXPATH 50
+#define MAXPIPES 10
 
 #define OK 0
 #define ERRORS 1
@@ -20,6 +21,11 @@
 //built-in commands:
 #define PRINTENVIRON 1 
 #define GOODBYE 2
+
+#define PIPE_ERR -1 	//error for exceeding max number of pipes
+#define QUOTES_ERR -2	//error for mismatched quotes within string
+
+#define DOUBLE_QUOTE '\"'
 
 //command line arguments
 typedef struct comargs {
@@ -60,11 +66,12 @@ extern int recursive;
 extern int pathlength;
 extern int currarg;
 extern int login;
-extern int builtin;
 extern int bicmd;		//specifies which built-in command was read - 0 if not built-in
 extern int bioutf;		//Is output being redirected for a built-in?
 extern char* bistr;		//string to be used for doing built-ins
 extern char* bistr2;	//second string for use with built-ins
+extern int nPipes;		//number of pipes in a command line
+extern int cmds[MAXPIPES];	//array holding offset of each piped command within command line string
 extern int debug;
 extern int IwasSet;
 extern int err;
