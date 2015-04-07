@@ -7,19 +7,7 @@ Things to be done:
 
 sometimes gets some weird errors because tokenizer cuts off at 'r' for some reason - just make clean and try again
 
-move to shell.c:
-	setenv
-	unsetenv
-	alias
-	alias word word
-	unalias
-	cd
-	cd word
-	pwd
-
-redirect output:
-	alias
-	pwd
+redirect output
 
 setting err_msg - some in comments (insertAlias)
 
