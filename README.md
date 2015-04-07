@@ -1,28 +1,43 @@
-# ShellProject
-Greg Friedman		friedmangreg37@ufl.edu
-Krystal Mejia		krystalmejia24@ufl.edu
+Shell Project
+==========================
+
+Students
+--------
+
+Name             | Gatorlink
+-----------------|----------
+Greg Friedman    | friedmangreg37@ufl.edu
+Krystal Mejia    | krystalmejia24@ufl.edu
 
 
-Things to be done:
 
-sometimes gets some weird errors because tokenizer cuts off at 'r' for some reason - just make clean and try again
+Things to be done
+------------------
 
-redirect output
+1. sometimes gets some weird errors because tokenizer cuts off at 'r' for some reason - just make clean and try again
+		* hasn't shown up again
 
-setting err_msg - some in comments (insertAlias)
+2. redirect output
 
-quotations
+3. setting err_msg - some in comments (insertAlias)
 
-non built-in commands - should be able to just use exec sys calls 
+4. quotations 
+		* Krystal working on it
 
-piping - only for non built-ins so figure those out first
+5. non built-in commands - should be able to just use exec sys calls  - greg has figured something out
 
-& - running in background
+6. piping - only for non built-ins so figure those out first
 
-redirecting error
+7. & - running in background
 
-look at 2.3 - other commands section to check what needs to be done for redirection, piping, etc
+8. redirecting error
 
-scan for \(metacharacter)
+9. 2.3 - other commands section to check what needs to be done for redirection, piping, etc
 
-don't alias for built-ins anyways so don't worry about this
+10. scan for \(metacharacter)
+
+11. don't alias for built-ins anyways so don't worry about this 
+		* Done
+
+12. segmentation fault when running printenv \
+		* krystals working on it
