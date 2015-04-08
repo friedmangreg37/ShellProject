@@ -21,8 +21,8 @@ Things to be done
 
 3. setting err_msg - some in comments (insertAlias)
 
-4. quotations 
-	* Krystal working on it
+4. quotations and metacharacters
+	* created a token.c file to read quotes and metacharacters. will push once i implement into shell.c
 
 5. non built-in commands - should be able to just use exec sys calls  - greg has figured something out
 
@@ -34,10 +34,16 @@ Things to be done
 
 9. 2.3 - other commands section to check what needs to be done for redirection, piping, etc
 
-10. scan for \(metacharacter)
-
-11. don't alias for built-ins anyways so don't worry about this 
-	* Done
-
-12. segmentation fault when running printenv 
+10. segmentation fault when running printenv 
 	* krystals working on it
+		
+11. ERROR: pwd command is sometimes printing the path next to the >> cursor and reading the following command without >> cursor
+	(try typing pwd twice in a row to see error)
+ 	
+	  
+	  
+			
+
+
+	
+	
