@@ -24,6 +24,13 @@ cd				return CD;
 pwd				return PWD;
 bye				return BYE;
 [a-zA-z0-9\/.-]+	yylval.sval = strdup(yytext); return WORD;
+\".*\"			{
+					char* temp = strdup(yytext);
+					yylval.sval = &temp[1];
+					yylval.sval[strlen(temp)-2] = '\0';
+					return WORD;
+				}
 [ \t]			/* ignore whitespace */
 [\n]			{ return -1; }
 %%
+
