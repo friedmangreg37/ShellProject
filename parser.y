@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include "shell.h"
 
-extern char** environ;
 extern char* yytext;
  
 void yyerror(const char *str)
@@ -28,7 +27,7 @@ int yywrap()
 
 %token <i>	LT GT AMP LPAREN RPAREN BAR DOT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD 
+%token <sval>	WORD
 
 %%
 commands:
@@ -106,5 +105,15 @@ builtin:
 		{
 			bicmd = GOODBYE;
 		}
+		|
+		WORD
+		{
+			bicmd = 0;	//not builtin
+			comtab[0].comname = $1;
+			comtab[0].atptr = NULL;
+			comtab[0].nargs = 0;
+		}
+		// |
+		// WORD arguments
 		;
 %%

@@ -6,8 +6,9 @@
 #define MAXPIPES 10
 
 #define OK 0
-#define ERRORS 1
-#define DONE 2
+#define NONBUILTIN 1
+#define ERRORS 2
+#define DONE 3
 
 #define BADFD -2
 #define EOFILE 2
@@ -30,6 +31,10 @@
 
 #define PIPE_ERR -1 	//error for exceeding max number of pipes
 #define QUOTES_ERR -2	//error for mismatched quotes within string
+
+#define EXECERROR -1 	//error when failing to exec
+#define FORKERROR -2	//error when failing to fork
+#define MEMERROR -3 	//failed to allocate memory
 
 #define DOUBLE_QUOTE '\"'
 
@@ -60,9 +65,9 @@ typedef struct cache {
 	char* hostport;
 } CACHE;
 
-extern aliasNode headAliasNode;
-extern aliasNode* aliasHead;
-extern COMMAND comtab[];
+extern aliasNode headAliasNode;	//head node of alias node linked list - null node
+extern aliasNode* aliasHead;	//pointer to head of alias linked list
+extern COMMAND comtab[];	//table to hold the commands in a line of input
 extern CACHE cachetab[];
 extern char* pathtab[];
 extern int currcmd;
@@ -72,6 +77,7 @@ extern int recursive;
 extern int pathlength;
 extern int currarg;
 extern int login;
+extern char** environ;	//array of environment variables
 extern int bicmd;		//specifies which built-in command was read - 0 if not built-in
 extern int bioutf;		//Is output being redirected for a built-in?
 extern char* bistr;		//string to be used for doing built-ins

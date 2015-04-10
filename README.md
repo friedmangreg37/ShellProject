@@ -39,6 +39,8 @@ Things to be done
 		
 11. ERROR: pwd command is sometimes printing the path next to the >> cursor and reading the following command without >> cursor
 	(try typing pwd twice in a row to see error)
+
+12. look for \(metacharacter)
  	
 	  
 	  

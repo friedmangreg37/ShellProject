@@ -32,4 +32,3 @@ bye				return BYE;
 [ \t]			/* ignore whitespace */
 [\n]			{ return -1; }
 %%
-
