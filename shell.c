@@ -8,6 +8,7 @@
 
 char* prompt_string;
 int currcmd;
+int currarg;
 aliasNode headAliasNode;
 aliasNode* aliasHead;
 char** environ;
