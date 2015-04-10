@@ -21,7 +21,6 @@ unsetenv		return UNSETENV;
 alias			return ALIAS;
 unalias			return UNALIAS;
 cd				return CD;
-pwd				return PWD;
 bye				return BYE;
 [a-zA-z0-9\/.-]+	yylval.sval = strdup(yytext); return WORD;
 \".*\"			{
