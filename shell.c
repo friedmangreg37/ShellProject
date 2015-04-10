@@ -24,6 +24,7 @@ int cmd;
 char inStr[80];
 char* err_msg;
 COMMAND comtab[10];
+ARGTAB args[MAXARGS];
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();

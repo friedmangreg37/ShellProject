@@ -122,15 +122,15 @@ other:
 		cmd
 		{
 			bicmd = 0;
-			comtab[currcmd].comname = mkstr($1);
-			comtab[currcmd].atptr = NIL(ARGTAB);
+			comtab[currcmd].comname = $1;
+			comtab[currcmd].atptr = NULL;
 			comtab[currcmd].nargs = 0;
 		}
 		|
-		cmd args
+		cmd arguments
 		{
 			bicmd = 0;
-			comtab[currcmd].comname = mkstr($1);
+			comtab[currcmd].comname = $1;
 			comtab[currcmd].nargs = currarg;
 		}
 		;
@@ -138,7 +138,7 @@ other:
 cmd:	
 		WORD 
 		{
-			$$ = $1
+			$$ = $1;
 		}
 		;
 	
@@ -147,19 +147,19 @@ arguments:
 		{
 			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
 			currarg = 1;
-			p->atptr->[currarg++] = mkstr($1);
+			p->atptr->args[currarg++] = $1;
 		}
 		|
 		arguments WORD
 		{
-			p->atptr->args[currarg++] = mkstr($2);
+			p->atptr->args[currarg++] = $2;
 		}
 		;
 
 words: 
 		WORD WORD
 		|
-		words Word
+		words WORD
 		;
 		
 
