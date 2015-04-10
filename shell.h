@@ -35,6 +35,7 @@
 #define EXECERROR -1 	//error when failing to exec
 #define FORKERROR -2	//error when failing to fork
 #define MEMERROR -3 	//failed to allocate memory
+#define INSERTERROR -4	//error on inserting alias
 
 #define DOUBLE_QUOTE '\"'
 

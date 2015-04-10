@@ -36,7 +36,10 @@ commands:
 command:
 		| builtin
 		| builtin LT WORD
-			{ printf("Error: illegal input redirection\n"); }
+			{ 
+				err_msg = "illegal input redirection";
+				return 1;
+			}
 builtin:
 		SETENV WORD WORD
 		{

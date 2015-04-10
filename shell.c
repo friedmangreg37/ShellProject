@@ -66,11 +66,13 @@ int main(int argc, char** argv) {
 	}
 }
 
+//called before each scan
 void initScanner() {
 	bicmd = 0;	//initially false that built-in is read
 	bioutf = 0;	//false that output redirected
 	bistr = NULL;	//null string
 	bistr2 = NULL;	//null string
+	err_msg = NULL;
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
@@ -110,7 +112,8 @@ int getCommand() {
 	}
 
 	if(y == 1) {	//grammar error in yacc
-		err_msg = "grammar error";
+		if(err_msg == NULL)
+			err_msg = "grammar error";
 		return ERRORS;
 	}else if(y == 2) { //memory exhaustion error
 		err_msg = "memory exhaustion error";
@@ -131,6 +134,7 @@ int processCommand() {
 //function to perform built-in commands - return 0 if no error, -1 if error
 int do_it() {
 	FILE* fp;
+	int ret;	//return value
 	switch(bicmd) {
 		case GOODBYE:
 			printf("Exiting shell now\n");
@@ -175,7 +179,9 @@ int do_it() {
 				fclose(fp);
 			break;
 		case SETALIAS:
-			insertAlias(bistr, bistr2);
+			ret = insertAlias(bistr, bistr2);
+			if(ret == -1)	//there was an error
+				return INSERTERROR;
 			break;
 		case UNSETALIAS:
 			removeAlias(bistr);
@@ -251,14 +257,12 @@ void printPrompt() {
 int insertAlias(char* theName, char* theWord) {
 	//don't allow alias to be created for itself
 	if(strcmp(theName, theWord) == 0) {
-		//error message for this
-		printf("Cannot create alias for itself\n");
+		err_msg = "cannot create alias for itself";
 		return -1;
 	}
 	//check if alias already exists for theName
 	if(aliasExists(theName)) {
-		//set error message for the following:
-		printf("Alias already exists for %s\n", theName);
+		err_msg = "alias already exists for that word";
 		return -1;
 	}
 	//check for circular aliasing
@@ -266,8 +270,7 @@ int insertAlias(char* theName, char* theWord) {
 	char* tempWord = findAlias(tempName);
 	while(tempWord != NULL) {
 		if(strcmp(tempWord, theName) == 0) {
-			//error message for circular aliasing
-			printf("Error: cannot add alias - will result in infinite alias expansion\n");
+			err_msg = "cannot add alias - will result in infinite alias expansion";
 			return -1;
 		}
 		tempName = tempWord;
