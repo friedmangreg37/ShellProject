@@ -29,6 +29,14 @@ bye				return BYE;
 					yylval.sval[strlen(temp)-2] = '\0';
 					return WORD;
 				}
+\$\{.*\}		{ 
+					char* temp = strdup(yytext);
+					yylval.sval = &temp[2];
+					yylval.sval[strlen(temp)-3] = '\0';
+					if(getenv(yylval.sval))
+						yylval.sval = getenv(yylval.sval);
+					return WORD;
+				}
 [ \t]			/* ignore whitespace */
 [\n]			{ return -1; }
 %%
