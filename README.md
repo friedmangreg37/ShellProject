@@ -14,26 +14,28 @@ Krystal Mejia    | krystalmejia24@ufl.edu
 Things to be done
 ------------------
 
-2. redirect output
+1. redirect output
 
-3. setting err_msg - some in comments (insertAlias)
+2. setting err_msg - some in comments (insertAlias)
 
-4. metacharacters
+3. metacharacters
 	* created a token.c file to read quotes and metacharacters. will push once i implement into shell.c
 
-6. piping - only for non built-ins so figure those out first
+4. piping - only for non built-ins so figure those out first
 
-7. & - running in background
+5. & - running in background
 
-8. redirecting error
+6. redirecting error
 
-9. 2.3 - other commands section to check what needs to be done for redirection, piping, etc
+7. 2.3 - other commands section to check what needs to be done for redirection, piping, etc
 
-10. segmentation fault when running printenv 
+8. segmentation fault when running printenv 
 	* krystals working on it
 		
-11. ERROR: pwd command is sometimes printing the path next to the >> cursor and reading the following command without >> cursor
+9. ERROR: pwd command is sometimes printing the path next to the >> cursor and reading the following command without >> cursor
 	(try typing pwd twice in a row to see error)
 		* I haven't noticed this - Greg
 
-12. look for \(metacharacter)
+10. look for \(metacharacter)
+
+11. wildcare matching

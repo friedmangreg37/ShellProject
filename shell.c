@@ -5,6 +5,8 @@
 #include "shell.h"
 #include <errno.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 char* prompt_string;
 int currcmd;
@@ -266,8 +268,6 @@ int execute_it() {
 			//parent process
 			wait(status);
 		}
-		
-		temps[i] = NULL;
 	}
 	for(i = 0; i < ncmds; ++i)
 		free(temps[i]);
