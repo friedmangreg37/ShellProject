@@ -8,7 +8,6 @@
 
 char* prompt_string;
 int currcmd;
-int currarg;
 aliasNode headAliasNode;
 aliasNode* aliasHead;
 char** environ;
@@ -24,7 +23,8 @@ int cmd;
 char inStr[80];
 char* err_msg;
 COMMAND comtab[10];
-ARGTAB args[MAXARGS];
+int currcmd;
+int currarg;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -68,38 +68,39 @@ int main(int argc, char** argv) {
 	}
 }
 
+void initShell() {
+	fpin = stdin;		//set default file pointer for input to stdin
+	fpout = stdout;		//default fp for output is stdout
+	fperror = stderr;	//default fp for error is sderr
+	prompt_string = ">> ";	
+	headAliasNode.name = NULL;	//initialize alias list to empty
+	headAliasNode.word = NULL;
+	headAliasNode.next = NULL;
+	aliasHead = &headAliasNode;
+}
+
 //called before each scan
 void initScanner() {
 	bicmd = 0;	//initially false that built-in is read
 	bioutf = 0;	//false that output redirected
 	bistr = NULL;	//null string
-	bistr2 = NULL;	//null string
+	bistr2 = NULL;
 	err_msg = NULL;
+	currcmd = 0;
+	currarg = 0;
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
 		comtab[i].comname = NULL;
 		comtab[i].remote = 0;
-		comtab[i].infd = 0;
-		comtab[i].outfd = 1;
+		comtab[i].infd = 0;		//stdin
+		comtab[i].outfd = 1;	//stdout
 		comtab[i].nargs = 0;
 		comtab[i].atptr = NULL;
 	}
 }
 
 int getCommand() {
-	initScanner();
-	if(fgets(inStr, 80, fpin) == NULL)	//end of file
-		return DONE;
-	char* p = inStr;
-	int length = 0;
-	while( (p != NULL) && (*p != ' ') && (*p != '\t') && (*p != '\n')) {
-		p++;
-		length++;
-	}
-	
-	//printf("%s\n", theCommand);
-	yy_scan_string(inStr);	//pass the expanded string to lex
 	int y = yyparse();
 
 	//expand aliases:
@@ -109,6 +110,7 @@ int getCommand() {
 		//check if there's an alias for the first word
 		while(temp != NULL) {
 			comtab[0].comname = temp;	//replace with its alias
+			comtab[0].atptr->args[0] = temp;	//replace first argument(command name) with the alias
 			temp = findAlias(comtab[0].comname);	//and check again
 		}
 	}
@@ -152,7 +154,7 @@ int do_it() {
 				fp = fopen(bistr, "a");
 				if(fp == NULL) {
 					err_msg = strerror(errno);
-					return -1;
+					return OTHERERROR;
 				}
 			}
 			int i = 0;
@@ -173,7 +175,7 @@ int do_it() {
 				fp = fopen(bistr, "a");
 				if(fp == NULL) {
 					err_msg = strerror(errno);
-					return -1;
+					return OTHERERROR;
 				}
 			}
 			printAliases(fp);
@@ -183,16 +185,20 @@ int do_it() {
 		case SETALIAS:
 			ret = insertAlias(bistr, bistr2);
 			if(ret == -1)	//there was an error
-				return INSERTERROR;
+				return OTHERERROR;
 			break;
 		case UNSETALIAS:
 			removeAlias(bistr);
 			break;
 		case CHANGEDIR:
 			if(bistr)
-				chdir(bistr);
+				ret = chdir(bistr);
 			else
-				chdir(getenv("HOME"));
+				ret = chdir(getenv("HOME"));
+			if(ret == -1) {	//error
+				err_msg = strerror(errno);
+				return OTHERERROR;
+			}
 			break;
 		default:
 			break;
@@ -208,18 +214,15 @@ int execute_it() {
 	//allocate space for the command name:
 	if( (temp = (char *) malloc(sizeof(char) * (strlen(bin) + strlen(theCommand)) + 1)) == NULL) {
 		err_msg = "failed to allocate memory";
-		return MEMERROR;
+		return OTHERERROR;
 	}
 	strcat(temp, bin);	//add "/bin/" to command name
 	strcat(temp, theCommand);	//concatenate the command
-	comtab[0].comname = temp;
-	char* args[2];
-	args[0] = theCommand;
-	args[1] = (char*) 0;
+	//comtab[0].comname = temp;
 	pid_t pid = fork();
 	int* status;	//place where wait will store status
 	if(pid == 0) {
-		int execReturn = execve(comtab[0].comname, args, environ);
+		int execReturn = execve(temp, comtab[0].atptr->args, environ);
 		if(execReturn == -1) {
 			printf("failed to execute command\n");
 			return EXECERROR;
@@ -228,7 +231,7 @@ int execute_it() {
 	}
 	else if(pid < 0) {
 		printf("process failed to fork\n");
-		return FORKERROR;
+		return OTHERERROR;
 	}
 	else {
 		//parent process
@@ -237,18 +240,6 @@ int execute_it() {
 	free(temp);
 
 	return 0;
-}
-
-void initShell() {
-	fpin = stdin;		//set default file pointer for input to stdin
-	fpout = stdout;		//default fp for output is stdout
-	fperror = stderr;	//default fp for error is sderr
-	prompt_string = ">> ";	
-	headAliasNode.name = NULL;	//initialize alias list to empty
-	headAliasNode.word = NULL;
-	headAliasNode.next = NULL;
-	aliasHead = &headAliasNode;
-	bicmd = 0;		//initially false that a built-in command was read
 }
 
 void printPrompt() {

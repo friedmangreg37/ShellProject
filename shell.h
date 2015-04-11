@@ -32,10 +32,8 @@
 #define PIPE_ERR -1 	//error for exceeding max number of pipes
 #define QUOTES_ERR -2	//error for mismatched quotes within string
 
-#define EXECERROR -1 	//error when failing to exec
-#define FORKERROR -2	//error when failing to fork
-#define MEMERROR -3 	//failed to allocate memory
-#define INSERTERROR -4	//error on inserting alias
+#define EXECERROR -1 	//error when failing to exec - need to exit forked process
+#define OTHERERROR -2	//another type of error occurring - set err_msg appropriately
 
 #define DOUBLE_QUOTE '\"'
 
@@ -71,12 +69,12 @@ extern aliasNode* aliasHead;	//pointer to head of alias linked list
 extern COMMAND comtab[];	//table to hold the commands in a line of input
 extern CACHE cachetab[];
 extern char* pathtab[];
-extern int currcmd;
+extern int currcmd;		//current command for entry in command table
 extern int currcache;
 extern int lastcmd;
 extern int recursive;
 extern int pathlength;
-extern int currarg;
+extern int currarg;		//current argument in command table entry's arbtab
 extern int login;
 extern char** environ;	//array of environment variables
 extern int bicmd;		//specifies which built-in command was read - 0 if not built-in

@@ -5,7 +5,10 @@
 #include <sys/types.h>
 #include "shell.h"
 
+extern char** environ;
 extern char* yytext;
+COMMAND *p;
+
  
 void yyerror(const char *str)
 {
@@ -27,7 +30,12 @@ int yywrap()
 
 %token <i>	LT GT AMP LPAREN RPAREN BAR DOT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD
+%token <sval>	WORD 
+
+%type <sval> cmd
+
+%start commands
+
 
 %%
 commands:
@@ -36,10 +44,10 @@ commands:
 command:
 		| builtin
 		| builtin LT WORD
-			{ 
-				err_msg = "illegal input redirection";
-				return 1;
-			}
+			{ printf("Error: illegal input redirection\n"); }
+		| other 	
+		| other LT WORD
+			{ printf("Error: illegal input redirection\n"); }
 builtin:
 		SETENV WORD WORD
 		{
@@ -108,15 +116,56 @@ builtin:
 		{
 			bicmd = GOODBYE;
 		}
+		;
+
+other: 
+		cmd
+		{
+			bicmd = 0;
+			comtab[currcmd].comname = $1;
+			comtab[currcmd].nargs = 1;
+			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
+			p->atptr->args[0] = $1;
+		}
 		|
+		cmd arguments
+		{
+			bicmd = 0;
+			comtab[currcmd].comname = $1;
+			comtab[currcmd].nargs = currarg;
+			comtab[currcmd].atptr->args[0] = $1;
+		}
+		;
+		
+cmd:	
+		WORD 
+		{
+			$$ = $1;
+		}
+		;
+	
+arguments:
 		WORD
 		{
-			bicmd = 0;	//not builtin
-			comtab[0].comname = $1;
-			comtab[0].atptr = NULL;
-			comtab[0].nargs = 0;
+			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
+			currarg = 1;
+			p->atptr->args[currarg++] = $1;
 		}
-		// |
-		// WORD arguments
+		|
+		arguments WORD
+		{
+			p->atptr->args[currarg++] = $2;
+		}
 		;
+
+words: 
+		WORD WORD
+		|
+		words WORD
+		;
+		
+
+		
+		
+
 %%
