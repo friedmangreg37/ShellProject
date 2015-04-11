@@ -26,6 +26,7 @@ char* err_msg;
 COMMAND comtab[10];
 int currcmd;
 int currarg;
+int ncmds;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -89,6 +90,7 @@ void initScanner() {
 	err_msg = NULL;
 	currcmd = 0;
 	currarg = 0;
+	ncmds = 0;
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
@@ -232,36 +234,43 @@ int do_it() {
 
 //function to execute non built-in commands - return 0 if no error, negative if error
 int execute_it() {
-	char* theCommand = comtab[0].comname;
+	int i;
+	char* theCommand;
 	char* bin = "/bin/";	//start of command name needs to be /bin/
-	char* temp = NULL;
-	//allocate space for the command name:
-	if( (temp = (char *) malloc(sizeof(char) * (strlen(bin) + strlen(theCommand)) + 1)) == NULL) {
-		err_msg = "failed to allocate memory";
-		return OTHERERROR;
-	}
-	strcat(temp, bin);	//add "/bin/" to command name
-	strcat(temp, theCommand);	//concatenate the command
-	//comtab[0].comname = temp;
-	pid_t pid = fork();
-	int* status;	//place where wait will store status
-	if(pid == 0) {
-		int execReturn = execve(temp, comtab[0].atptr->args, environ);
-		if(execReturn == -1) {
-			err_msg = "failed to execute command";
-			return EXECERROR;
+	char* temps[ncmds];
+	for(i = 0; i < ncmds; ++i) {
+		theCommand = comtab[i].comname;
+		//allocate space for the command name:
+		if( (temps[i] = (char *) malloc(sizeof(char) * (strlen(bin) + strlen(theCommand)) + 1)) == NULL) {
+			err_msg = "failed to allocate memory";
+			return OTHERERROR;
 		}
-		exit(0);
+		strcat(temps[i], bin);	//add "/bin/" to command name
+		strcat(temps[i], theCommand);	//concatenate the command
+		//comtab[0].comname = temps[i];
+		pid_t pid = fork();
+		int* status;	//place where wait will store status
+		if(pid == 0) {
+			int execReturn = execve(temps[i], comtab[i].atptr->args, environ);
+			if(execReturn == -1) {
+				err_msg = "failed to execute command";
+				return EXECERROR;
+			}
+			exit(0);
+		}
+		else if(pid < 0) {
+			err_msg = "process failed to fork";
+			return OTHERERROR;
+		}
+		else {
+			//parent process
+			wait(status);
+		}
+		
+		temps[i] = NULL;
 	}
-	else if(pid < 0) {
-		err_msg = "process failed to fork";
-		return OTHERERROR;
-	}
-	else {
-		//parent process
-		wait(status);
-	}
-	free(temp);
+	for(i = 0; i < ncmds; ++i)
+		free(temps[i]);
 
 	return 0;
 }

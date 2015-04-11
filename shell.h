@@ -70,6 +70,7 @@ extern COMMAND comtab[];	//table to hold the commands in a line of input
 extern CACHE cachetab[];
 extern char* pathtab[];
 extern int currcmd;		//current command for entry in command table
+extern ncmds;			//number of piped commands in the line of input
 extern int currcache;
 extern int lastcmd;
 extern int recursive;

@@ -45,9 +45,10 @@ command:
 		| builtin LT WORD
 			{ 
 				err_msg = "illegal input redirection";
-				return 1;
+				return 1;	//return error value
 			}
-		| other 	
+		| piped
+		| other
 		| other LT WORD
 			{ printf("Error: illegal input redirection\n"); }
 builtin:
@@ -120,6 +121,17 @@ builtin:
 		}
 		;
 
+piped:
+		other BAR other
+		{
+			ncmds = currcmd;
+		}
+		|
+		piped BAR other
+		{
+			ncmds = currcmd;
+		}
+
 other: 
 		cmd
 		{
@@ -128,6 +140,8 @@ other:
 			comtab[currcmd].nargs = 1;
 			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
 			p->atptr->args[0] = $1;
+			currcmd++;
+			ncmds = currcmd;
 		}
 		|
 		cmd arguments
@@ -136,6 +150,8 @@ other:
 			comtab[currcmd].comname = $1;
 			comtab[currcmd].nargs = currarg;
 			comtab[currcmd].atptr->args[0] = $1;
+			currcmd++;
+			ncmds = currcmd;
 		}
 
 		;
