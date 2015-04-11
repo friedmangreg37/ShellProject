@@ -21,6 +21,7 @@ int inRedirect = 0;
 char inFilename[80];
 int cmd;
 char inStr[80];
+char aliasStr[160];
 char* err_msg;
 COMMAND comtab[10];
 int currcmd;
@@ -101,19 +102,42 @@ void initScanner() {
 }
 
 int getCommand() {
-	int y = yyparse();
+	initScanner();
+	if(fgets(inStr, 80, fpin) == NULL)	//end of file
+		return DONE;
+	char* p = inStr;
+	int length = 0;
+	//get first word
+	while( (p != NULL) && (*p != ' ') && (*p != '\t') && (*p != '\n')) {
+		length++;
+		p++;
+	}
+	char first[length+1];
+	int i;
+	for(i = 0; i < length; i++)
+		first[i] = inStr[i];
+	first[length] = '\0';
 
 	//expand aliases:
+	aliasStr[0] = '\0';
 	char* temp;
-	if(comtab[0].comname != NULL) {
-		temp = findAlias(comtab[0].comname);
+	char* newFirst = first;		//new string after alias replacement
+	if(newFirst != NULL) {
+		temp = findAlias(newFirst);
 		//check if there's an alias for the first word
 		while(temp != NULL) {
-			comtab[0].comname = temp;	//replace with its alias
-			comtab[0].atptr->args[0] = temp;	//replace first argument(command name) with the alias
-			temp = findAlias(comtab[0].comname);	//and check again
+			newFirst = temp;	//replace with its alias
+			temp = findAlias(newFirst);	//and check again
 		}
 	}
+
+	//update input string with alias expansion:
+	strcat(aliasStr, newFirst);
+	strcat(aliasStr, p);
+	
+	yy_scan_string(aliasStr);	//pass the expanded string to lex
+
+	int y = yyparse();
 
 	if(y == 1) {	//grammar error in yacc
 		if(err_msg == NULL)

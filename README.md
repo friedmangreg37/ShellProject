@@ -43,6 +43,3 @@ Things to be done
 12. look for \(metacharacter)
  
 13. Environment variables - read from ${ to next} and substitute value for variable
-
-15. will need to move aliased to before passing to yacc again
-	  
