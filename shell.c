@@ -248,13 +248,13 @@ int execute_it() {
 	if(pid == 0) {
 		int execReturn = execve(temp, comtab[0].atptr->args, environ);
 		if(execReturn == -1) {
-			printf("failed to execute command\n");
+			err_msg = "failed to execute command";
 			return EXECERROR;
 		}
 		exit(0);
 	}
 	else if(pid < 0) {
-		printf("process failed to fork\n");
+		err_msg = "process failed to fork";
 		return OTHERERROR;
 	}
 	else {

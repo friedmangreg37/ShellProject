@@ -12,8 +12,7 @@ COMMAND *p;
  
 void yyerror(const char *str)
 {
-    //fprintf(stderr,"error: %s\n",str);
-    //yyparse();
+
 }
  
 int yywrap()
@@ -44,7 +43,10 @@ commands:
 command:
 		| builtin
 		| builtin LT WORD
-			{ printf("Error: illegal input redirection\n"); }
+			{ 
+				err_msg = "illegal input redirection";
+				return 1;
+			}
 		| other 	
 		| other LT WORD
 			{ printf("Error: illegal input redirection\n"); }
@@ -135,6 +137,7 @@ other:
 			comtab[currcmd].nargs = currarg;
 			comtab[currcmd].atptr->args[0] = $1;
 		}
+
 		;
 		
 cmd:	
@@ -157,15 +160,4 @@ arguments:
 			p->atptr->args[currarg++] = $2;
 		}
 		;
-
-words: 
-		WORD WORD
-		|
-		words WORD
-		;
-		
-
-		
-		
-
 %%
