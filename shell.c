@@ -300,6 +300,11 @@ int execute_it() {
 	// 	close(theoutfd);
 	// }
 	if(pid == 0) {
+		if(inredir) {
+			int fd1 = open(comtab[0].infn, O_RDONLY, 0);
+			dup2(fd1, theinfd);
+			close(fd1);
+		}
 		if(outredir) {
 			int fd1 = creat(comtab[ncmds-1].outfn, 0644);
 			dup2(fd1, theoutfd);

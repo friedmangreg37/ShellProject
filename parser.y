@@ -49,10 +49,12 @@ command:
 			}
 		| piped
 		| other
-		| other LT WORD
-			{ printf("Error: illegal input redirection\n"); }
+		| other input
+		| piped input
 		| other output
 		| piped output
+		| other input output
+		| piped input output
 builtin:
 		SETENV WORD WORD
 		{
@@ -214,10 +216,19 @@ meta:
 		}
 		;
 
+input:	LT WORD
+		{
+			comtab[0].infn = $2;
+			comtab[0].infd = BADFD;
+			inredir = 1;
+		}
+		;
+
 output:	GT WORD
 		{
 			comtab[currcmd-1].outfn = $2;	//save name of file
 			comtab[currcmd-1].outfd = BADFD;	//tell shell output redirected
 			outredir = 1;
 		}
+		;
 %%
