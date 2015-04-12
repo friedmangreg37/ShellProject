@@ -30,23 +30,23 @@ Features we have not implemented:
 Features we have implemented:
 -----------------------------
 Builtin Commands:
-	-setenv
-	-unsetenv
-	-printenv (as mentioned above, works on Greg's computer but no others)
-	-cd
-	-alias
-	-unalias
-	-bye
+	- setenv
+	- unsetenv
+	- printenv (as mentioned above, works on Greg's computer but no others)
+	- cd
+	- alias
+	- unalias
+	- bye
 
 Other Commands:
-	-executes other commands and their arguments with execve
-	-Note: if a proper command is entered but invalid arguments are given (anytime it calls execve but this doesn't work), any subsequent nonbuiltin commands will make the shell be stuck, and Control-c must be used to end it
-	-input redirection
-	-output redirection (normal and appending)
-	-error redirection (to file and to stdout)
-	-piping
-	-aliases for any command name in pipeline
-	-path name searching
+	- executes other commands and their arguments with execve
+	- Note: if a proper command is entered but invalid arguments are given (anytime it calls execve but this doesn't work), any subsequent nonbuiltin commands will make the shell be stuck, and Control-c must be used to end it
+	- input redirection
+	- output redirection (normal and appending)
+	- error redirection (to file and to stdout)
+	- piping
+	- aliases for any command name in pipeline
+	- path name searching
 
 Environment variable expansion
 
