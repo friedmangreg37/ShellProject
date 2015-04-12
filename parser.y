@@ -52,7 +52,7 @@ command:
 		| other LT WORD
 			{ printf("Error: illegal input redirection\n"); }
 		| other output
-			{ printf("Output redirection\n"); }
+		| piped output
 builtin:
 		SETENV WORD WORD
 		{
