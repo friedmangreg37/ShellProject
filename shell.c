@@ -135,9 +135,54 @@ int getCommand() {
 		}
 	}
 
-	//update input string with alias expansion:
+	//update input string with alias expansion for piped commands:
 	strcat(aliasStr, newFirst);
-	strcat(aliasStr, p);
+	char* pipe = strchr(p, '|');	//search the rest of the string for pipes
+	while(pipe != NULL) {
+		length = pipe - p + 2;
+		//make sure surrounded by spaces:
+		if(*(p+length-1) == ' ' && *(p+length-3) == ' ') {
+			char difference[length+1];
+			for(i = 0; i < length; ++i)
+				difference[i] = p[i];
+			difference[length] = '\0';
+			strcat(aliasStr, difference);
+			pipe += 2;	//move to beginning of next command
+			p = pipe;
+			length = 0;
+			//get command name
+			while( (p != NULL) && (*p != ' ') && (*p != '\t') && (*p != '\n')) {
+				length++;
+				p++;
+			}
+			char next[length+1];
+			for(i = 0; i < length; ++i)
+				next[i] = pipe[i];
+			next[length] = '\0';
+
+			char* nextTemp;
+			char* newNext = next;
+			if(newNext != NULL) {
+				nextTemp = findAlias(newNext);
+				while(nextTemp != NULL) {
+					newNext = nextTemp;
+					nextTemp = findAlias(newNext);
+				}
+			}
+			strcat(aliasStr, newNext);
+			pipe = strchr(p, '|');
+		}else {
+			char difference[length+1];
+			for(i = 0; i < length; ++i)
+				difference[i] = p[i];
+			difference[length] = '\0';
+			strcat(aliasStr, difference);
+			p = pipe+2;
+			pipe = strchr(p, '|');
+		}
+	}
+
+	strcat(aliasStr, p);	//append the rest of the string
 	
 	yy_scan_string(aliasStr);	//pass the expanded string to lex
 
