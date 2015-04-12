@@ -31,6 +31,7 @@ int currarg;
 int ncmds;
 int inredir;
 int outredir;
+int errredir;
 int append;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
@@ -71,7 +72,8 @@ int main(int argc, char** argv) {
 				fprintf(fperror, "Error: %s\n", err_msg);
 				break;
 		}
-
+		if(errredir)
+			fclose(fperror);
 	}
 }
 
@@ -98,6 +100,7 @@ void initScanner() {
 	ncmds = 0;
 	inredir = 0;		//input not redirected by default
 	outredir = 0;		//output not redirected
+	errredir = 0;
 	append = 0;
 	//reset command table:
 	int i;
@@ -232,7 +235,10 @@ int do_it() {
 			break;
 		case PRINTENVIRON:
 			if(bioutf) {	//if true that there was output redirection
-				fp = fopen(bistr, "a");
+				if(append)
+					fp = fopen(bistr, "a");
+				else
+					fp = fopen(bistr, "w");
 				if(fp == NULL) {
 					err_msg = strerror(errno);
 					return OTHERERROR;
@@ -253,7 +259,10 @@ int do_it() {
 		case PRINTALIAS:
 			fp = stdout;
 			if(bioutf) {
-				fp = fopen(bistr, "a");
+				if(append)
+					fp = fopen(bistr, "a");
+				else
+					fp = fopen(bistr, "w");
 				if(fp == NULL) {
 					err_msg = strerror(errno);
 					return OTHERERROR;

@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "shell.h"
+#include <errno.h>
+#include <string.h>
 
 extern char** environ;
 extern char* yytext;
@@ -27,9 +29,9 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT GGT AMP LPAREN RPAREN BAR FSLASH
+%token <i>	LT GT GGT AMP LPAREN RPAREN BAR FSLASH ERRORTOOUT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD MATCH QUEST
+%token <sval>	WORD MATCH QUEST ERRORREDIR
 
 %type <sval> cmd
 
@@ -38,7 +40,10 @@ int yywrap()
 
 %%
 commands:
-		| commands command
+		| command
+		| command error_redir
+		| command background
+		| command error_redir background
 		;
 command:
 		| builtin
@@ -82,6 +87,14 @@ builtin:
 			bistr = $3;
 		}
 		|
+		PRINTENV GGT WORD
+		{
+			bicmd = PRINTENVIRON;
+			bioutf = 1;		//output redirection is true
+			bistr = $3;
+			append = 1;		//append is true
+		}
+		|
 		ALIAS
 		{
 			bicmd = PRINTALIAS;
@@ -92,6 +105,14 @@ builtin:
 			bicmd = PRINTALIAS;
 			bioutf = 1;	//output redirection is true
 			bistr = $3;		//filename
+		}
+		|
+		ALIAS GGT WORD
+		{
+			bicmd = PRINTALIAS;
+			bioutf = 1;	//output redirection is true
+			bistr = $3;
+			append = 1;	//append is true
 		}
 		|
 		ALIAS WORD WORD
@@ -191,8 +212,6 @@ arguments:
 		|
 		meta
 		|
-		AMP
-		|
 		arguments WORD
 		{
 			p->atptr->args[currarg++] = $2;
@@ -202,11 +221,6 @@ arguments:
 		{
 			p->atptr->args[currarg++] = $2;
 		}
-		|
-		arguments AMP
-		{
-			printf("do something in background\n");
-		} 
 		;
 		
 meta:
@@ -239,4 +253,24 @@ output:	GT WORD
 			append = 1;
 		}
 		;
+error_redir:	ERRORTOOUT
+				{
+					fperror = stdout;	//connect stderr to stdout
+				}
+				|
+				ERRORREDIR
+				{
+					fperror = fopen($1, "w");		//try to open the file
+					if(fperror == NULL) {
+						err_msg = strerror(errno);
+						return 1;
+					}
+					errredir = 1;
+				}
+				;
+
+background:		AMP
+				{
+					printf("do something in background\n");
+				}
 %%

@@ -16,6 +16,13 @@
 ")"				return RPAREN;
 "|"				return BAR;
 "/"				return FSLASH;
+"2>&1"			return ERRORTOOUT;
+"2>"[a-zA-z0-9\/.-]+	{
+							char* temp = strdup(yytext);
+							yylval.sval = &temp[2];
+							yylval.sval[strlen(temp)-2] = '\0';
+							return ERRORREDIR;
+						}
 setenv			return SETENV;
 printenv		return PRINTENV;
 unsetenv		return UNSETENV;

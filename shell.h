@@ -88,6 +88,8 @@ extern int nPipes;		//number of pipes in a command line
 extern int cmds[MAXPIPES];	//array holding offset of each piped command within command line string
 extern int inredir;		//Is input redirected?
 extern int outredir;	//Is output redirected?
+extern int errredir;	//Is error redirected?
+extern FILE* fperror;	//file pointer for error
 extern int debug;
 extern int IwasSet;
 extern int err;
