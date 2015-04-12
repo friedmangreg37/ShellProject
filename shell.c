@@ -271,6 +271,8 @@ int execute_it() {
 			dup2(in, 0);
 		i = ncmds-1;	//execute last command
 		theCommand = getCommandName(comtab[i].comname);
+		if(theCommand == NULL)
+			return EXECERROR;
 		int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 		if(execReturn == -1) {
 			err_msg = "failed to execute command";
