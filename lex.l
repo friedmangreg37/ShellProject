@@ -14,7 +14,7 @@
 "(" 			return LPAREN;
 ")"				return RPAREN;
 "|"				return BAR;
-"."				return DOT;
+"/"				return FSLASH;
 setenv			return SETENV;
 printenv		return PRINTENV;
 unsetenv		return UNSETENV;
@@ -37,6 +37,8 @@ bye				return BYE;
 						yylval.sval = getenv(yylval.sval);
 					return WORD;
 				}
+\*.+			{yylval.sval = strdup(yytext); return MATCH;}
+[?]*			{yylval.sval = strdup(yytext); return QUEST;}
 [ \t]			/* ignore whitespace */
 [\n]			{ return -1; }
 %%
