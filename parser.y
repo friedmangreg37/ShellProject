@@ -1,13 +1,6 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include "shell.h"
-#include <errno.h>
-#include <string.h>
 
-extern char** environ;
 extern char* yytext;
 COMMAND *p;
 

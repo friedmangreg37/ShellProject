@@ -1,3 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 #define MAXCMDS 50
 #define MAXARGS 300
 #define MAXALIAS 100
