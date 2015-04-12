@@ -26,6 +26,7 @@ int outredir;
 int errredir;
 int append;
 int background;
+int match;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -96,6 +97,7 @@ void initScanner() {
 	errredir = 0;		//error not redirected
 	append = 0;			//don't append redirection by default
 	background = 0;		//background initially false
+	match = 0; 			//wildcard matching initially false
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {

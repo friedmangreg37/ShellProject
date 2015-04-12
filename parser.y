@@ -22,7 +22,7 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT GGT AMP LPAREN RPAREN BAR FSLASH ERRORTOOUT
+%token <i>	LT GT GGT AMP LPAREN RPAREN BAR SLASH ERRORTOOUT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
 %token <sval>	WORD MATCH QUEST ERRORREDIR
 
@@ -203,8 +203,6 @@ arguments:
 			p->atptr->args[currarg++] = $1;
 		}
 		|
-		meta
-		|
 		arguments WORD
 		{
 			p->atptr->args[currarg++] = $2;
@@ -216,13 +214,6 @@ arguments:
 		}
 		;
 		
-meta:
-		FSLASH
-		{
-			printf("/ testing... IDK WHY WE NEED TO RECOGNIZE YOU\n");
-		}
-		;
-
 input:	LT WORD
 		{
 			comtab[0].infn = $2;
