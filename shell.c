@@ -31,6 +31,7 @@ int currarg;
 int ncmds;
 int inredir;
 int outredir;
+int append;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -75,9 +76,6 @@ int main(int argc, char** argv) {
 }
 
 void initShell() {
-	fpin = stdin;		//set default file pointer for input to stdin
-	fpout = stdout;		//default fp for output is stdout
-	fperror = stderr;	//default fp for error is sderr
 	prompt_string = ">> ";	
 	headAliasNode.name = NULL;	//initialize alias list to empty
 	headAliasNode.word = NULL;
@@ -87,6 +85,9 @@ void initShell() {
 
 //called before each scan
 void initScanner() {
+	fpin = stdin;		//set default file pointer for input to stdin
+	fpout = stdout;		//default fp for output is stdout
+	fperror = stderr;	//default fp for error is sderr
 	bicmd = 0;	//initially false that built-in is read
 	bioutf = 0;	//false that output redirected
 	bistr = NULL;	//null string
@@ -97,6 +98,7 @@ void initScanner() {
 	ncmds = 0;
 	inredir = 0;		//input not redirected by default
 	outredir = 0;		//output not redirected
+	append = 0;
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
@@ -302,13 +304,37 @@ int execute_it() {
 	if(pid == 0) {
 		if(inredir) {
 			int fd1 = open(comtab[0].infn, O_RDONLY, 0);
-			dup2(fd1, theinfd);
-			close(fd1);
+			if(fd1 == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
+			if(dup2(fd1, theinfd) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
+			if(close(fd1) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
 		}
 		if(outredir) {
-			int fd1 = creat(comtab[ncmds-1].outfn, 0644);
-			dup2(fd1, theoutfd);
-			close(fd1);
+			int fd1;
+			if(append)
+				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_APPEND | O_CREAT);
+			else
+				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_CREAT | O_TRUNC);
+			if(fd1 == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
+			if(dup2(fd1, theoutfd) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
+			if(close(fd1) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
 		}
 		int in, fd[2];
 		in = theinfd;
@@ -317,47 +343,57 @@ int execute_it() {
 			pid_t execpid;
 			if(execpid = fork() == 0) {
 				if(in != theinfd) {
-					dup2(in, theinfd);
-					close(in);
+					if(dup2(in, theinfd) == -1) {
+						err_msg = strerror(errno);
+						return EXECERROR;
+					}
+					if(close(in) == -1) {
+						err_msg = strerror(errno);
+						return EXECERROR;
+					}
 				}
 				if(fd[1] != theoutfd) {
-					dup2(fd[1], theoutfd);
-					close(fd[1]);
+					if(dup2(fd[1], theoutfd) == -1) {
+						err_msg = strerror(errno);
+						return EXECERROR;
+					}
+					if(close(fd[1]) == -1) {
+						err_msg = strerror(errno);
+						return EXECERROR;
+					}
 				}
 				theCommand = getCommandName(comtab[i].comname);
-				if(theCommand == NULL) {
-					
+				if(theCommand == NULL)
 					return EXECERROR;
-				}
 				int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 				if(execReturn == -1) {
 					err_msg = "failed to execute command";
-					
 					return EXECERROR;
 				}
 			}
-			close(fd[1]);
+			if(close(fd[1]) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
 			in = fd[0];
 		}
 		if(in != theinfd) 
-			dup2(in, theinfd);
+			if(dup2(in, theinfd) == -1) {
+				err_msg = strerror(errno);
+				return EXECERROR;
+			}
 		i = ncmds-1;	//execute last command
 		theCommand = getCommandName(comtab[i].comname);
-		if(theCommand == NULL) {
-			
+		if(theCommand == NULL)
 			return EXECERROR;
-		}
 		int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 		if(execReturn == -1) {
 			err_msg = "failed to execute command";
-			
 			return EXECERROR;
 		}
-		
 		exit(0);
 	}else if(pid < 0) {
 		err_msg = "process failed to fork";
-		
 		return OTHERERROR;
 	}else {
 		wait(status);

@@ -27,7 +27,7 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT AMP LPAREN RPAREN BAR FSLASH
+%token <i>	LT GT GGT AMP LPAREN RPAREN BAR FSLASH
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
 %token <sval>	WORD MATCH QUEST
 
@@ -229,6 +229,14 @@ output:	GT WORD
 			comtab[currcmd-1].outfn = $2;	//save name of file
 			comtab[currcmd-1].outfd = BADFD;	//tell shell output redirected
 			outredir = 1;
+		}
+		|
+		GGT WORD
+		{
+			comtab[currcmd-1].outfn = $2;
+			comtab[currcmd-1].outfd = BADFD;
+			outredir = 1;
+			append = 1;
 		}
 		;
 %%

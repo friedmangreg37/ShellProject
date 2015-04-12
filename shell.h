@@ -104,7 +104,7 @@ extern char* prompt_string;
 extern int user_defined_prompt;
 extern char srcf[];
 extern char distf[];
-extern int append;
+extern int append;		//Do we append output redirection?
 extern int loop;
 
 #define Allocate(t) (t*)malloc(sizeof(t))

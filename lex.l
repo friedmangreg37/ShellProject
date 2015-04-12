@@ -10,6 +10,7 @@
 %%
 "<"				return LT;
 ">"				return GT;
+">>"			return GGT;
 "&"				return AMP;
 "(" 			return LPAREN;
 ")"				return RPAREN;
