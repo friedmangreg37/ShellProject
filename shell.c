@@ -33,7 +33,7 @@ int ncmds;
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
 int insertAlias(char*, char*), getCommand();
-char* findAlias(char*);
+char* findAlias(char*), *getCommandName(char*);
 
 int main(int argc, char** argv) {
 	initShell();
@@ -238,8 +238,7 @@ int do_it() {
 int execute_it() {
 	int i;
 	char* theCommand;
-	char* bin = "/usr/bin/";	//start of command name needs to be /bin/
-	char* temps[ncmds];
+	int* status;
 	pid_t pid = fork();
 	if(pid == 0) {
 		int in, fd[2];
@@ -256,16 +255,10 @@ int execute_it() {
 					dup2(fd[1], 1);
 					close(fd[1]);
 				}
-				theCommand = comtab[i].comname;
-				//allocate space for the command name:
-				if( (temps[i] = (char *) malloc(sizeof(char) * (strlen(bin) + strlen(theCommand)) + 1)) == NULL) {
-					err_msg = "failed to allocate memory";
-					return OTHERERROR;
-				}
-				strcat(temps[i], bin);	//add "/bin/" to command name
-				strcat(temps[i], theCommand);	//concatenate the command
-				int* status;
-				int execReturn = execve(temps[i], comtab[i].atptr->args, environ);
+				theCommand = getCommandName(comtab[i].comname);
+				if(theCommand == NULL)
+					return EXECERROR;
+				int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 				if(execReturn == -1) {
 					err_msg = "failed to execute command";
 					return EXECERROR;
@@ -276,17 +269,9 @@ int execute_it() {
 		}
 		if(in != 0) 
 			dup2(in, 0);
-		i = ncmds-1;
-		theCommand = comtab[i].comname;
-		//allocate space for the command name:
-		if( (temps[i] = (char *) malloc(sizeof(char) * (strlen(bin) + strlen(theCommand)) + 1)) == NULL) {
-			err_msg = "failed to allocate memory";
-			return OTHERERROR;
-		}
-		strcat(temps[i], bin);	//add "/bin/" to command name
-		strcat(temps[i], theCommand);	//concatenate the command
-		int* status;
-		int execReturn = execve(temps[i], comtab[i].atptr->args, environ);
+		i = ncmds-1;	//execute last command
+		theCommand = getCommandName(comtab[i].comname);
+		int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 		if(execReturn == -1) {
 			err_msg = "failed to execute command";
 			return EXECERROR;
@@ -296,11 +281,43 @@ int execute_it() {
 		err_msg = "process failed to fork";
 		return OTHERERROR;
 	}else {
-		int* status;
 		wait(status);
 	}
 
 	return 0;
+}
+
+//function to find command name to use with execve
+//will return NULL if command does not exist
+char* getCommandName(char* theCommand) {
+	if( strchr(theCommand, '/') != NULL)
+		return theCommand;
+
+	char* str = getenv("PATH");
+  	const char s[2] = ":";
+   	char *token;
+   	// get the first token
+   	token = strtok(str, s);
+   	// walk through other tokens
+   	while( token != NULL ) 
+   	{
+   		char* temp = NULL;
+		//allocate space for the command name:
+		if( (temp = (char *) malloc(sizeof(char) * (strlen(token) + strlen(theCommand)) + 1)) == NULL) {
+			err_msg = "failed to allocate memory";
+			return NULL;
+		}
+		strcat(temp, token);	//add "/bin/" to command name
+		strcat(temp, "/");
+		strcat(temp, theCommand);	//concatenate the command
+
+      	if(access(temp, X_OK) == 0)
+      		return temp;
+    
+      	token = strtok(NULL, s);
+   	}
+   	err_msg = "command not found";
+   	return NULL;
 }
 
 void printPrompt() {
