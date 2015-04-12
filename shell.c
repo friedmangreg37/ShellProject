@@ -29,6 +29,8 @@ COMMAND comtab[10];
 int currcmd;
 int currarg;
 int ncmds;
+int inredir;
+int outredir;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -93,13 +95,17 @@ void initScanner() {
 	currcmd = 0;
 	currarg = 0;
 	ncmds = 0;
+	inredir = 0;		//input not redirected by default
+	outredir = 0;		//output not redirected
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
 		comtab[i].comname = NULL;
 		comtab[i].remote = 0;
 		comtab[i].infd = 0;		//stdin
+		comtab[i].infn = NULL;
 		comtab[i].outfd = 1;	//stdout
+		comtab[i].outfn = NULL;
 		comtab[i].nargs = 0;
 		comtab[i].atptr = NULL;
 	}
@@ -284,51 +290,73 @@ int execute_it() {
 	int i;
 	char* theCommand;
 	int* status;
+	int theinfd = STDIN_FILENO;		//save the first command's infd
+	int theoutfd = STDOUT_FILENO;	//save the last command's outfd
 	pid_t pid = fork();
+	//int savedStdout = dup(1);	//save standard out fd
+	// if(theoutfd == BADFD) {
+	// 	theoutfd = open(comtab[ncmds-1].outfn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+	// 	dup2(theoutfd, 1);
+	// 	close(theoutfd);
+	// }
 	if(pid == 0) {
+		if(outredir) {
+			int fd1 = creat(comtab[ncmds-1].outfn, 0644);
+			dup2(fd1, theoutfd);
+			close(fd1);
+		}
 		int in, fd[2];
-		in = 0;
+		in = theinfd;
 		for(i = 0; i < ncmds-1; ++i) {
 			pipe(fd);
 			pid_t execpid;
 			if(execpid = fork() == 0) {
-				if(in != 0) {
-					dup2(in, 0);
+				if(in != theinfd) {
+					dup2(in, theinfd);
 					close(in);
 				}
-				if(fd[1] != 1) {
-					dup2(fd[1], 1);
+				if(fd[1] != theoutfd) {
+					dup2(fd[1], theoutfd);
 					close(fd[1]);
 				}
 				theCommand = getCommandName(comtab[i].comname);
-				if(theCommand == NULL)
+				if(theCommand == NULL) {
+					
 					return EXECERROR;
+				}
 				int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 				if(execReturn == -1) {
 					err_msg = "failed to execute command";
+					
 					return EXECERROR;
 				}
 			}
 			close(fd[1]);
 			in = fd[0];
 		}
-		if(in != 0) 
-			dup2(in, 0);
+		if(in != theinfd) 
+			dup2(in, theinfd);
 		i = ncmds-1;	//execute last command
 		theCommand = getCommandName(comtab[i].comname);
-		if(theCommand == NULL)
+		if(theCommand == NULL) {
+			
 			return EXECERROR;
+		}
 		int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 		if(execReturn == -1) {
 			err_msg = "failed to execute command";
+			
 			return EXECERROR;
 		}
+		
 		exit(0);
 	}else if(pid < 0) {
 		err_msg = "process failed to fork";
+		
 		return OTHERERROR;
 	}else {
 		wait(status);
+		
 	}
 
 	return 0;
@@ -394,7 +422,7 @@ int insertAlias(char* theName, char* theWord) {
 		tempName = tempWord;
 		tempWord = findAlias(tempName);
 	}
-	aliasNode* newNode = (aliasNode*)malloc(sizeof(aliasNode));
+	aliasNode* newNode = Allocate(aliasNode);
 	if(newNode == NULL) {
 		//set error message to indicate memory issue
 		return -1;

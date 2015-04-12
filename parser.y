@@ -51,6 +51,8 @@ command:
 		| other
 		| other LT WORD
 			{ printf("Error: illegal input redirection\n"); }
+		| other output
+			{ printf("Output redirection\n"); }
 builtin:
 		SETENV WORD WORD
 		{
@@ -131,6 +133,7 @@ piped:
 		{
 			ncmds = currcmd;
 		}
+		;
 
 other: 
 		cmd
@@ -210,4 +213,11 @@ meta:
 			printf("/ testing... IDK WHY WE NEED TO RECOGNIZE YOU\n");
 		}
 		;
+
+output:	GT WORD
+		{
+			comtab[currcmd-1].outfn = $2;	//save name of file
+			comtab[currcmd-1].outfd = BADFD;	//tell shell output redirected
+			outredir = 1;
+		}
 %%

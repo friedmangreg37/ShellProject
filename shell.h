@@ -47,7 +47,9 @@ typedef struct com {
 	char* comname;
 	int remote;
 	int infd;
+	char* infn;		//input redirect filename
 	int outfd;
+	char* outfn;	//output redirect filename
 	int nargs;
 	ARGTAB* atptr;
 } COMMAND;
@@ -84,6 +86,8 @@ extern char* bistr;		//string to be used for doing built-ins
 extern char* bistr2;	//second string for use with built-ins
 extern int nPipes;		//number of pipes in a command line
 extern int cmds[MAXPIPES];	//array holding offset of each piped command within command line string
+extern int inredir;		//Is input redirected?
+extern int outredir;	//Is output redirected?
 extern int debug;
 extern int IwasSet;
 extern int err;
