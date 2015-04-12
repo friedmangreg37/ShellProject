@@ -27,9 +27,9 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT AMP LPAREN RPAREN BAR DOT
+%token <i>	LT GT AMP LPAREN RPAREN BAR FSLASH
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD 
+%token <sval>	WORD MATCH QUEST
 
 %type <sval> cmd
 
@@ -153,7 +153,6 @@ other:
 			currcmd++;
 			ncmds = currcmd;
 		}
-
 		;
 		
 cmd:	
@@ -164,6 +163,20 @@ cmd:
 		;
 	
 arguments:
+		MATCH
+		{ 	
+			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
+			currarg = 1;
+			p->atptr->args[currarg++] = $1;
+		}
+		|
+		QUEST
+		{ 	
+			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
+			currarg = 1;
+			p->atptr->args[currarg++] = $1;
+		}
+		|
 		WORD
 		{
 			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
@@ -171,9 +184,30 @@ arguments:
 			p->atptr->args[currarg++] = $1;
 		}
 		|
+		meta
+		|
+		AMP
+		|
 		arguments WORD
 		{
 			p->atptr->args[currarg++] = $2;
+		}
+		|
+		arguments MATCH
+		{
+			p->atptr->args[currarg++] = $2;
+		}
+		|
+		arguments AMP
+		{
+			printf("do something in background\n");
+		} 
+		;
+		
+meta:
+		FSLASH
+		{
+			printf("/ testing... IDK WHY WE NEED TO RECOGNIZE YOU\n");
 		}
 		;
 %%
