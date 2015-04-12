@@ -14,10 +14,10 @@ FILE* fperror;
 int inRedirect = 0;
 char inFilename[80];
 int cmd;
-char inStr[80];
-char aliasStr[160];
+char inStr[80];		//input string to read from command line
+char aliasStr[160];		//expanded input string after alias checking
 char* err_msg;
-COMMAND comtab[10];
+COMMAND comtab[20];
 int currcmd;
 int currarg;
 int ncmds;
@@ -25,6 +25,7 @@ int inredir;
 int outredir;
 int errredir;
 int append;
+int background;
 
 void initShell(), printPrompt(), removeAlias(char*), printAliases(FILE*), initScanner();
 int processCommand(), do_it(), execute_it();
@@ -52,19 +53,19 @@ int main(int argc, char** argv) {
 					fclose(fpin);
 				printf("Exiting shell now\n");
 				exit(0);
-			case OK:
+			case OK:	//recognized pattern in yacc
 				ret = processCommand();
-				if(ret < 0) {
+				if(ret < 0) {		//if there was an error display it
 					fprintf(fperror, "Error: %s\n", err_msg);
 					if(ret == EXECERROR)
 						exit(0);	//need to exit from forked process
 				}
 				break;
-			case ERRORS:
+			case ERRORS:	//error in yyparse
 				fprintf(fperror, "Error: %s\n", err_msg);
 				break;
 		}
-		if(errredir)
+		if(errredir)		//if error was redirected close the file
 			fclose(fperror);
 	}
 }
@@ -86,30 +87,34 @@ void initScanner() {
 	bioutf = 0;	//false that output redirected
 	bistr = NULL;	//null string
 	bistr2 = NULL;
-	err_msg = NULL;
-	currcmd = 0;
-	currarg = 0;
-	ncmds = 0;
+	err_msg = NULL;		//no error message initally
+	currcmd = 0;		//reset current command
+	currarg = 0;		//reset current argument
+	ncmds = 0;			//reset number of commands
 	inredir = 0;		//input not redirected by default
 	outredir = 0;		//output not redirected
-	errredir = 0;
-	append = 0;
+	errredir = 0;		//error not redirected
+	append = 0;			//don't append redirection by default
+	background = 0;		//background initially false
 	//reset command table:
 	int i;
 	for(i = 0; i < MAXPIPES; i++) {
-		comtab[i].comname = NULL;
-		comtab[i].remote = 0;
-		comtab[i].infd = 0;		//stdin
-		comtab[i].infn = NULL;
-		comtab[i].outfd = 1;	//stdout
-		comtab[i].outfn = NULL;
-		comtab[i].nargs = 0;
-		comtab[i].atptr = NULL;
+		comtab[i].comname = NULL;	//no command name
+		comtab[i].infd = 0;		//stdin by default
+		comtab[i].infn = NULL;	//no input file yet
+		comtab[i].outfd = 1;	//stdout by default
+		comtab[i].outfn = NULL;	//no output file yet
+		comtab[i].nargs = 0;	//number of arguments 0 by default
+		comtab[i].atptr = NULL;	//no arguments yet
 	}
 }
 
+//function to get the command(s) to be executed from yacc
+//will expand aliases then pass to yacc
+//returns OK if no errors from yacc or error value if there are errors
 int getCommand() {
 	initScanner();
+	//read in line of input:
 	if(fgets(inStr, 80, fpin) == NULL)	//end of file
 		return DONE;
 	char* p = inStr;
@@ -137,9 +142,10 @@ int getCommand() {
 			temp = findAlias(newFirst);	//and check again
 		}
 	}
+	//add expanded first word to the string to pass to yacc
+	strcat(aliasStr, newFirst);
 
 	//update input string with alias expansion for piped commands:
-	strcat(aliasStr, newFirst);
 	char* pipe = strchr(p, '|');	//search the rest of the string for pipes
 	while(pipe != NULL) {
 		length = pipe - p + 2;
@@ -163,6 +169,7 @@ int getCommand() {
 				next[i] = pipe[i];
 			next[length] = '\0';
 
+			//replace with alias(es), if any
 			char* nextTemp;
 			char* newNext = next;
 			if(newNext != NULL) {
@@ -172,9 +179,9 @@ int getCommand() {
 					nextTemp = findAlias(newNext);
 				}
 			}
-			strcat(aliasStr, newNext);
-			pipe = strchr(p, '|');
-		}else {
+			strcat(aliasStr, newNext);	//add it to the string
+			pipe = strchr(p, '|');		//and look for another pipe
+		}else {		//if not surrounded by spaces, move on past it without checking for aliases
 			char difference[length+1];
 			for(i = 0; i < length; ++i)
 				difference[i] = p[i];
@@ -227,31 +234,31 @@ int do_it() {
 			break;
 		case PRINTENVIRON:
 			if(bioutf) {	//if true that there was output redirection
-				if(append)
+				if(append)		//append to end of file if >> 
 					fp = fopen(bistr, "a");
-				else
+				else		//don't append if >
 					fp = fopen(bistr, "w");
-				if(fp == NULL) {
+				if(fp == NULL) {	//fail to open file
 					err_msg = strerror(errno);
 					return OTHERERROR;
 				}
 			}
 			int i = 0;
 			while(environ[i]) {
-				if(bioutf) {
+				if(bioutf) {	//if output redirected, output to specified file
 					fputs(environ[i++], fp);
 					fputs("\n", fp);
 				}
-				else
+				else	//otherwise output to stdout
 					puts(environ[i++]);
 			}
-			if(bioutf)
-				fclose(fp);
+			if(bioutf)	
+				fclose(fp);		//close file if output was redirected
 			break;
 		case PRINTALIAS:
 			fp = stdout;
-			if(bioutf) {
-				if(append)
+			if(bioutf) {	//output is redirected
+				if(append)	
 					fp = fopen(bistr, "a");
 				else
 					fp = fopen(bistr, "w");
@@ -273,9 +280,9 @@ int do_it() {
 			removeAlias(bistr);
 			break;
 		case CHANGEDIR:
-			if(bistr)
+			if(bistr)	//if path was specified, change to it
 				ret = chdir(bistr);
-			else
+			else	//otherwise go home (only "cd" entered)
 				ret = chdir(getenv("HOME"));
 			if(ret == -1) {	//error
 				err_msg = strerror(errno);
@@ -296,29 +303,23 @@ int execute_it() {
 	int theinfd = STDIN_FILENO;		//save the first command's infd
 	int theoutfd = STDOUT_FILENO;	//save the last command's outfd
 	pid_t pid = fork();
-	//int savedStdout = dup(1);	//save standard out fd
-	// if(theoutfd == BADFD) {
-	// 	theoutfd = open(comtab[ncmds-1].outfn, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-	// 	dup2(theoutfd, 1);
-	// 	close(theoutfd);
-	// }
 	if(pid == 0) {
-		if(inredir) {
-			int fd1 = open(comtab[0].infn, O_RDONLY, 0);
-			if(fd1 == -1) {
+		if(inredir) {		//input redirected for first command
+			int fd1 = open(comtab[0].infn, O_RDONLY, 0);	//try to open the file
+			if(fd1 == -1) {	//if fail, return error
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
-			if(dup2(fd1, theinfd) == -1) {
+			if(dup2(fd1, theinfd) == -1) {		//replace stdin with new file
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
-			if(close(fd1) == -1) {
+			if(close(fd1) == -1) {		//close the extra
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
 		}
-		if(outredir) {
+		if(outredir) {		//output redirected for last command
 			int fd1;
 			if(append)
 				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_APPEND | O_CREAT);
@@ -328,11 +329,11 @@ int execute_it() {
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
-			if(dup2(fd1, theoutfd) == -1) {
+			if(dup2(fd1, theoutfd) == -1) {	//replace stdout with new file
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
-			if(close(fd1) == -1) {
+			if(close(fd1) == -1) {		//close the extra
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
@@ -343,18 +344,18 @@ int execute_it() {
 			pipe(fd);
 			pid_t execpid;
 			if(execpid = fork() == 0) {
-				if(in != theinfd) {
-					if(dup2(in, theinfd) == -1) {
+				if(in != theinfd) {		//if not first command
+					if(dup2(in, theinfd) == -1) {		//redirect input to previous command
 						err_msg = strerror(errno);
 						return EXECERROR;
 					}
-					if(close(in) == -1) {
+					if(close(in) == -1) {	//close the extra
 						err_msg = strerror(errno);
 						return EXECERROR;
 					}
 				}
-				if(fd[1] != theoutfd) {
-					if(dup2(fd[1], theoutfd) == -1) {
+				if(fd[1] != theoutfd) {		//if not last command
+					if(dup2(fd[1], theoutfd) == -1) {	//redirect output to next command
 						err_msg = strerror(errno);
 						return EXECERROR;
 					}
@@ -363,8 +364,8 @@ int execute_it() {
 						return EXECERROR;
 					}
 				}
-				theCommand = getCommandName(comtab[i].comname);
-				if(theCommand == NULL)
+				theCommand = getCommandName(comtab[i].comname);		//find command name to pass to exec
+				if(theCommand == NULL)	//couldn't find the command
 					return EXECERROR;
 				int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 				if(execReturn == -1) {
@@ -376,7 +377,7 @@ int execute_it() {
 				err_msg = strerror(errno);
 				return EXECERROR;
 			}
-			in = fd[0];
+			in = fd[0];		//set in to current command before moving to next one
 		}
 		if(in != theinfd) 
 			if(dup2(in, theinfd) == -1) {
@@ -398,20 +399,20 @@ int execute_it() {
 		return OTHERERROR;
 	}else {
 		wait(status);
-		
 	}
 
+	//no errors if we're here so return 0
 	return 0;
 }
 
 //function to find command name to use with execve
 //will return NULL if command does not exist
 char* getCommandName(char* theCommand) {
-	if( strchr(theCommand, '/') != NULL)
+	if( strchr(theCommand, '/') != NULL)	//if there's a '/' don't change anything
 		return theCommand;
 
 	char* str = getenv("PATH");
-  	const char s[2] = ":";
+  	const char s[2] = ":";	//search for ':' which separate different paths
    	char *token;
    	// get the first token
    	token = strtok(str, s);
@@ -424,15 +425,16 @@ char* getCommandName(char* theCommand) {
 			err_msg = "failed to allocate memory";
 			return NULL;
 		}
-		strcat(temp, token);	//add "/bin/" to command name
+		strcat(temp, token);	//add path to command name
 		strcat(temp, "/");
 		strcat(temp, theCommand);	//concatenate the command
 
-      	if(access(temp, X_OK) == 0)
+      	if(access(temp, X_OK) == 0)		//if command exists in this path, return the path and command name
       		return temp;
     
       	token = strtok(NULL, s);
    	}
+   	//didn't find the command so tell calling function the command
    	err_msg = "command not found";
    	return NULL;
 }

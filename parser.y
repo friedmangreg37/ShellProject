@@ -264,6 +264,7 @@ error_redir:	ERRORTOOUT
 
 background:		AMP
 				{
+					background = 1;
 					printf("do something in background\n");
 				}
 %%

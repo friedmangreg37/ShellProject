@@ -12,7 +12,7 @@
 #define MAXALIAS 100
 #define MAXCACHE 100
 #define MAXPATH 50
-#define MAXPIPES 10
+#define MAXPIPES 20
 
 #define OK 0
 #define NONBUILTIN 1
@@ -21,12 +21,6 @@
 
 #define BADFD -2
 #define EOFILE 2
-
-#define THE_ONLY_ONE 1
-#define FIRST 2
-#define LAST 3
-
-#define REGISTRY "REGISTRY"
 
 //built-in commands:
 #define PRINTENVIRON 1 
@@ -44,50 +38,34 @@
 #define EXECERROR -1 	//error when failing to exec - need to exit forked process
 #define OTHERERROR -2	//another type of error occurring - set err_msg appropriately
 
-#define DOUBLE_QUOTE '\"'
-
 //command line arguments
 typedef struct comargs {
-	char* args[MAXARGS];
+	char* args[MAXARGS];	//array for arguments of a command
 } ARGTAB;
 
 //command line
 typedef struct com {
-	char* comname;
-	int remote;
-	int infd;
+	char* comname;	//name of this command
+	int infd;		//input file descriptor
 	char* infn;		//input redirect filename
-	int outfd;
+	int outfd;		//output file descriptor
 	char* outfn;	//output redirect filename
-	int nargs;
-	ARGTAB* atptr;
+	int nargs;		//number of arguments for this command
+	ARGTAB* atptr;	//pointer to the argument array
 } COMMAND;
 
 typedef struct aliasNode {
-	char* name;
-	char* word;
-	struct aliasNode* next;
+	char* name;		//name of the alias
+	char* word;		//what the name stands for
+	struct aliasNode* next;		//next alias in linked list
 } aliasNode;
-
-//cache table
-typedef struct cache {
-	char* cmd;
-	char* hostport;
-} CACHE;
 
 extern aliasNode headAliasNode;	//head node of alias node linked list - null node
 extern aliasNode* aliasHead;	//pointer to head of alias linked list
 extern COMMAND comtab[];	//table to hold the commands in a line of input
-extern CACHE cachetab[];
-extern char* pathtab[];
 extern int currcmd;		//current command for entry in command table
 extern ncmds;			//number of piped commands in the line of input
-extern int currcache;
-extern int lastcmd;
-extern int recursive;
-extern int pathlength;
 extern int currarg;		//current argument in command table entry's arbtab
-extern int login;
 extern char** environ;	//array of environment variables
 extern int bicmd;		//specifies which built-in command was read - 0 if not built-in
 extern int bioutf;		//Is output being redirected for a built-in?
@@ -99,23 +77,9 @@ extern int inredir;		//Is input redirected?
 extern int outredir;	//Is output redirected?
 extern int errredir;	//Is error redirected?
 extern FILE* fperror;	//file pointer for error
-extern int debug;
-extern int IwasSet;
-extern int err;
-extern int error_somewhere;
 extern char* err_msg;	//string for error message
-extern int ap;
-extern int cmd_has_tail;
-extern int background;
-extern int concurrp;
-extern int eventcount;
-extern char home[];
-extern char* shname;
-extern char* prompt_string;
-extern int user_defined_prompt;
-extern char srcf[];
-extern char distf[];
+extern int background;		//Should command run in background?
+extern char* prompt_string;		//string to output when printing prompt
 extern int append;		//Do we append output redirection?
-extern int loop;
 
 #define Allocate(t) (t*)malloc(sizeof(t))
