@@ -372,6 +372,7 @@ int execute_it() {
 				int execReturn = execve(theCommand, comtab[i].atptr->args, environ);
 				if(execReturn == -1) {
 					err_msg = "failed to execute command";
+					exit(0);
 					return EXECERROR;
 				}
 			}

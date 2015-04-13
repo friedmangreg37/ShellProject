@@ -1,19 +1,34 @@
 pwd
 cd
 pwd
-setenv this that
+ls
+setenv this pwd
 printenv
+${this}
 unsetenv this
 printenv
-alias
 alias this this
-alias
 alias this that
+alias that this
+alias that who
 alias
-alias this those
+this
+unalias that
+unalias this
 alias
-alias that those
+alias lf "/bin/ls -F"
+lf
+ls -l | sort | cat -v -e | wc -l
+alias l "ls -l"
+alias s sort
+alias c "cat -v -e"
+alias w "wc -l"
 alias
-alias those this
-alias
+l | s | c | w > file.txt 2>file.txt &
+ls >> file.txt
+c < file.txt
+cd < file.txt
+who | wc -l < file.txt > foo.txt 2>&1
+who | wc -l > foo.txt < file.txt 2>&1
+foo | bar
 bye

@@ -24,7 +24,7 @@ int yywrap()
 
 %token <i>	LT GT GGT AMP LPAREN RPAREN BAR SLASH ERRORTOOUT
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD MATCH QUEST ERRORREDIR
+%token <sval>	WORD MATCH QUEST ERRORREDIR PATH
 
 %type <sval> cmd
 
@@ -57,6 +57,13 @@ builtin:
 		SETENV WORD WORD
 		{
 			bicmd = SETENVIRON;	//set builtin command
+			bistr = $2;
+			bistr2 = $3;
+		}
+		|
+		SETENV WORD PATH
+		{
+			bicmd = SETENVIRON;
 			bistr = $2;
 			bistr2 = $3;
 		}
@@ -256,6 +263,6 @@ error_redir:	ERRORTOOUT
 background:		AMP
 				{
 					background = 1;
-					printf("do something in background\n");
+					printf("run in background\n");
 				}
 %%
