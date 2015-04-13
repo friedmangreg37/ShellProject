@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <sys/stat.h>
 
 #define MAXCMDS 50
@@ -81,5 +82,6 @@ extern char* err_msg;	//string for error message
 extern int background;		//Should command run in background?
 extern char* prompt_string;		//string to output when printing prompt
 extern int append;		//Do we append output redirection?
+
 
 #define Allocate(t) (t*)malloc(sizeof(t))

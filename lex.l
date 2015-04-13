@@ -25,8 +25,7 @@ alias			return ALIAS;
 unalias			return UNALIAS;
 cd				return CD;
 bye				return BYE;
-[a-zA-Z0-9\/.-]+	{ yylval.sval = strdup(yytext); return WORD; }
-[a-zA-Z0-9\/.-_~:]+		{ yylval.sval = strdup(yytext); return PATH;}
+[a-zA-z0-9:~/.-]+	yylval.sval = strdup(yytext); return WORD;
 \".*\"			{
 					char* temp = strdup(yytext);
 					yylval.sval = &temp[1];
@@ -42,7 +41,8 @@ bye				return BYE;
 					return WORD;
 				}
 \*.+			{yylval.sval = strdup(yytext); return MATCH;}
-[?]*			{yylval.sval = strdup(yytext); return QUEST;}
 [ \t]			/* ignore whitespace */
+"?"				{yylval.sval = strdup(yytext); return QUEST;}
+"~"				{yylval.sval = strdup(yytext); return TILDE;}
 [\n]			{ return -1; }
 %%

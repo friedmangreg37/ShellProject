@@ -3,7 +3,8 @@
 
 extern char* yytext;
 COMMAND *p;
-
+char * match;
+glob_t globbuf;
  
 void yyerror(const char *str)
 {
@@ -22,9 +23,9 @@ int yywrap()
 	char* sval;
 }
 
-%token <i>	LT GT GGT AMP LPAREN RPAREN BAR SLASH ERRORTOOUT
+%token <i>	LT GT GGT AMP LPAREN RPAREN BAR ERRORTOOUT TILDE
 %token <i>	SETENV UNSETENV PRINTENV CD BYE ALIAS UNALIAS
-%token <sval>	WORD MATCH QUEST ERRORREDIR PATH
+%token <sval>	WORD MATCH QUEST ERRORREDIR
 
 %type <sval> cmd
 
@@ -57,13 +58,6 @@ builtin:
 		SETENV WORD WORD
 		{
 			bicmd = SETENVIRON;	//set builtin command
-			bistr = $2;
-			bistr2 = $3;
-		}
-		|
-		SETENV WORD PATH
-		{
-			bicmd = SETENVIRON;
 			bistr = $2;
 			bistr2 = $3;
 		}
@@ -126,6 +120,21 @@ builtin:
 		{
 			bicmd = UNSETALIAS;
 			bistr = $2;
+		}
+		|
+		CD TILDE
+		{
+			match = $2; 
+			int i = glob(getenv("HOME"),GLOB_TILDE, NULL, &globbuf);
+			if(i == 0){
+         		for(int j = 0; j < globbuf.gl_pathc; j++)
+         		{
+         			printf("%s\n", globbuf.gl_pathv[j]);
+         		}
+         	}
+         	else {
+         		printf("Error: grammar error\n");
+    		}
 		}
 		|
 		CD WORD
@@ -191,16 +200,37 @@ cmd:
 arguments:
 		MATCH
 		{ 	
+			
 			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
 			currarg = 1;
-			p->atptr->args[currarg++] = $1;
+			match = $1;
+			int i = glob(match,GLOB_DOOFFS, NULL, &globbuf);
+         	if(i == 0){
+         		for(int j = 0; j < globbuf.gl_pathc; j++)
+         		{
+         			p->atptr->args[currarg++] = globbuf.gl_pathv[j];
+         		}
+         	}
+         	else {
+         		printf("Error: grammar error\n");
+    		}	
 		}
 		|
 		QUEST
 		{ 	
 			(p = &comtab[currcmd])-> atptr = Allocate(ARGTAB);
 			currarg = 1;
-			p->atptr->args[currarg++] = $1;
+			match = $1;
+			int i = glob(match,GLOB_DOOFFS, NULL, &globbuf);
+         	if(i == 0){
+         		for(int j = 0; j < globbuf.gl_pathc; j++)
+         		{
+         			p->atptr->args[currarg++] = globbuf.gl_pathv[j];
+         		}
+         	}
+         	else {
+         		printf("Error: grammar error\n");
+    		}	
 		}
 		|
 		WORD
@@ -263,6 +293,6 @@ error_redir:	ERRORTOOUT
 background:		AMP
 				{
 					background = 1;
-					printf("run in background\n");
+					printf("do something in background\n");
 				}
 %%
