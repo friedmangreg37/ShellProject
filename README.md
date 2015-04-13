@@ -64,4 +64,4 @@ Other Commands:
 
 Environment variable expansion
 ------------------------------
-
+compile with "make" and run with "./shell" - will take input from file if run with "./shell < file.txt"
