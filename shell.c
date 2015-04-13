@@ -324,9 +324,9 @@ int execute_it() {
 		if(outredir) {		//output redirected for last command
 			int fd1;
 			if(append)
-				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_APPEND | O_CREAT);
+				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_APPEND | O_CREAT, 0);
 			else
-				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_CREAT | O_TRUNC);
+				fd1 = open(comtab[ncmds-1].outfn, O_WRONLY | O_CREAT | O_TRUNC, 0);
 			if(fd1 == -1) {
 				err_msg = strerror(errno);
 				return EXECERROR;
