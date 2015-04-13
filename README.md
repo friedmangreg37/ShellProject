@@ -50,19 +50,17 @@ Other Commands:
 
 1. executes other commands and their arguments with execve
 
-2. Note: if a proper command is entered but invalid arguments are given (anytime it calls execve but this doesn't work), any subsequent nonbuiltin commands will make the shell be stuck, and Control-c must be used to end it
+2. input redirection
 
-3. input redirection
+3. output redirection (normal and appending)
 
-4. output redirection (normal and appending)
+4. error redirection (to file and to stdout)
 
-5. error redirection (to file and to stdout)
+5. piping
 
-6. piping
+6. aliases for any command name in pipeline
 
-7. aliases for any command name in pipeline
-
-8. path name searching
+7. path name searching
 
 Environment variable expansion
 ------------------------------
